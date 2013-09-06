@@ -24,7 +24,7 @@ class DelayTests {
 
       // since each event is delayed by 1 milliseconds, give it some buffer space and check after 15 ms if
       // all the delayed events have been processed
-      new Timer(new Duration(milliseconds : 10), () {
+      new Timer(new Duration(milliseconds : 15), () {
         expect(list.length, equals(5), reason : "delayed stream should have populated delayed list");
         expect(hasErr, equals(false), reason : "delayed stream should not have received error");
         expect(isDone, equals(true),  reason : "delayed stream should be completed");
