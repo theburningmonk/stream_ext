@@ -5,6 +5,7 @@ class MergeTests {
     group('merge', () {
       _mergeWithNoErrors();
       _mergeNotCloseOnError();
+      _mergeCloseOnError();
     });
   }
 
@@ -62,11 +63,47 @@ class MergeTests {
       // closing the controllers happen asynchronously, so give it a few milliseconds for both to complete and trigger
       // the merged stream to also complete
       new Timer(new Duration(milliseconds : 5), () {
-        expect(list.length, equals(3));
+        expect(list.length, equals(3), reason : "merged stream should have all three events");
 
         for (var i = 0; i <= 2; i++) {
           expect(list.where((n) => n == i).length, equals(1));
         }
+
+        expect(hasErr, equals(true), reason : "merged stream should have received error");
+        expect(isDone, equals(true), reason : "merged stream should be completed");
+      });
+    });
+  }
+
+  void _mergeCloseOnError() {
+    test('close on error', () {
+      var controller1 = new StreamController.broadcast(sync : true);
+      var controller2 = new StreamController.broadcast(sync : true);
+
+      var stream1 = controller1.stream;
+      var stream2 = controller2.stream;
+
+      var list   = new List();
+      var hasErr = false;
+      var isDone = false;
+      StreamExt.merge(stream1, stream2, closeOnError : true, sync : true)
+        ..listen(list.add,
+                 onError : (_) => hasErr = true,
+                 onDone  : ()  => isDone = true);
+
+      controller1.add(0);
+      controller2.addError("failed");
+      controller1.add(1);
+      controller2.add(2);
+
+      controller1.close();
+      controller2.close();
+
+      // closing the controllers happen asynchronously, so give it a few milliseconds for both to complete and trigger
+      // the merged stream to also complete
+      new Timer(new Duration(milliseconds : 5), () {
+        expect(list.length, equals(1), reason : "merged stream should have only one event before the error");
+        expect(list[0],     equals(0), reason : "merged stream should contain the event value 0");
 
         expect(hasErr, equals(true), reason : "merged stream should have received error");
         expect(isDone, equals(true), reason : "merged stream should be completed");

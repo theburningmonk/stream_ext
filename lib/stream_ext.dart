@@ -16,16 +16,20 @@ class StreamExt {
     if (!controller.isClosed) controller.close();
   }
 
+  static _tryAdd(StreamController controller, event) {
+    if (!controller.isClosed) controller.add(event);
+  }
+
   static Stream merge(Stream stream1, Stream stream2, { bool closeOnError : false, bool sync : false }) {
     var controller = new StreamController.broadcast(sync : sync);
     var completer1 = new Completer();
     var completer2 = new Completer();
     var onError    = _getOnErrorHandler(controller, closeOnError);
 
-    stream1.listen(controller.add,
+    stream1.listen((x) => _tryAdd(controller, x),
                    onError : onError,
                    onDone : () => completer1.complete());
-    stream2.listen(controller.add,
+    stream2.listen((x) => _tryAdd(controller, x),
                    onError : onError,
                    onDone : () => completer2.complete());
 
@@ -42,7 +46,7 @@ class StreamExt {
 
     delayCall(f, [ x ]) => x == null ? new Timer(duration, f) : new Timer(duration, () => f(x));
 
-    input.listen((x) => delayCall(controller.add, x),
+    input.listen((x) => delayCall(() => _tryAdd(controller, x)),
                  onError : (err) => delayCall(onError, err),
                  onDone  : () => delayCall(() => _tryClose(controller)));
 
