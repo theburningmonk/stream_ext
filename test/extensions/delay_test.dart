@@ -17,7 +17,7 @@ class DelayTests {
       var list    = new List();
       var hasErr  = false;
       var isDone  = false;
-      StreamExt.delay(origin, new Duration(milliseconds : 1))
+      StreamExt.delay(origin, new Duration(milliseconds : 1), sync : true)
         ..listen(list.add,
                  onError : (_) => hasErr = true,
                  onDone  : ()  => isDone = true);
