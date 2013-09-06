@@ -10,8 +10,9 @@ class MergeTests {
 
   void _mergeWithNoErrors() {
     test('no errors', () {
-      var stream1 = new Stream.periodic(new Duration(milliseconds : 1), (n) => n);
-      var stream2 = new Stream.periodic(new Duration(milliseconds : 1), (n) => n);
+      var data = new List.generate(10, (n) => n);
+      var stream1 = new Stream.fromIterable(data);
+      var stream2 = new Stream.fromIterable(data);
 
       var list   = new List();
       var hasErr = false;
@@ -21,8 +22,8 @@ class MergeTests {
                  onError : (_) => hasErr = true,
                  onDone  : ()  => isDone = true);
 
-      new Timer(new Duration(milliseconds : 15), () {
-        expect(list.length, equals(10));
+      new Timer(new Duration(milliseconds : 5), () {
+        expect(list.length, equals(10), reason : "merged stream should contain 10 values");
 
         for (var i = 0; i <= 4; i++) {
           expect(list.where((n) => n == i).length, equals(2), reason : "merged stream should contain 2 instances of [$i]");
