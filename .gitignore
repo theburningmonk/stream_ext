@@ -1,0 +1,19 @@
+# files and directories created by pub, Dart Editor, and dart2js
+packages/
+*.project
+*.buildlog
+*.js_
+*.js.deps
+*.js.map
+pubspec.lock
+
+# files and directories dropped by other development environments
+.project      // Eclipse
+*.iml         // IntelliJ
+*.ipr         // IntelliJ
+*.iws         // IntelliJ
+.idea/        // IntelliJ
+.DS_Store     // Mac
+
+# generated JavaScript files
+*.dart.js
