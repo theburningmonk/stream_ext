@@ -4,7 +4,7 @@ class MergeTests {
   void start() {
     group('merge', () {
       _mergeWithNoErrors();
-      _mergeNotCancelOnError();
+      _mergeNotCloseOnError();
     });
   }
 
@@ -34,8 +34,8 @@ class MergeTests {
     });
   }
 
-  void _mergeNotCancelOnError() {
-    test('not cancel on error', () {
+  void _mergeNotCloseOnError() {
+    test('not close on error', () {
       var controller1 = new StreamController.broadcast(sync : true);
       var controller2 = new StreamController.broadcast(sync : true);
 

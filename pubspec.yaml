@@ -1,7 +1,8 @@
-name: StreamExt
+name: stream_ext
 version: 0.0.1
 author: Yan Cui <theburningmonk@gmail.com>
 description: Extension functions for Stream class
-homepage: https://github.com/theburningmonk/SteamExt
+homepage: https://github.com/theburningmonk/stream_ext
 dependencies:
+  browser: any
   unittest: any
