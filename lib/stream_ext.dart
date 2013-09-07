@@ -75,7 +75,7 @@ class StreamExt {
     input.listen((x) {
         // if this is the first item then push it
         if (buffer == null) {
-          controller.add(x);
+          _tryAdd(controller, x);
           buffer = x;
         } else {
           buffer = x;
@@ -86,7 +86,7 @@ class StreamExt {
             // only push the event to the output stream if the captured event has not been
             // superceded by a subsequent event
             if (buffer == x) {
-              controller.add(x);
+              _tryAdd(controller, x);
               buffer = null; // reset
             }
           });
