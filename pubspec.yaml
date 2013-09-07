@@ -5,4 +5,5 @@ description: Extension functions for Stream class
 homepage: https://github.com/theburningmonk/stream_ext
 dependencies:
   browser: any
+  js: any
   unittest: any
