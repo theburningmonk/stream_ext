@@ -64,7 +64,7 @@ class StreamExt {
   /// Creates a new stream who stops the flow of events produced by the input stream until no new event has been
   /// produced by the input stream after the specified duration.
   /// The throttled stream will complete if:
-  /// * the input stream has completed and the throttled complete message has been delivered
+  /// * the input stream has completed
   /// * [closeOnError] flag is set to true and an error is received
   static Stream throttle(Stream input, Duration duration, { bool closeOnError : false, bool sync : false }) {
     var controller = new StreamController.broadcast(sync : sync);
@@ -93,7 +93,12 @@ class StreamExt {
         }
       },
      onError : onError,
-     onDone  : () => _tryClose(controller));
+     onDone  : () {
+       if (buffer != null) {
+         _tryAdd(controller, buffer);
+       }
+       _tryClose(controller);
+     });
 
     return controller.stream;
   }
