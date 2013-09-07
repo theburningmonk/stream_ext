@@ -64,21 +64,25 @@ class StreamExt {
   /// Creates a new stream who stops the flow of events produced by the input stream until no new event has been
   /// produced by the input stream after the specified duration.
   /// The throttled stream will complete if:
-  /// * the input stream has completed
+  /// * the input stream has completed and the any throttled message has been delivered
   /// * [closeOnError] flag is set to true and an error is received
   static Stream throttle(Stream input, Duration duration, { bool closeOnError : false, bool sync : false }) {
     var controller = new StreamController.broadcast(sync : sync);
     var onError    = _getOnErrorHandler(controller, closeOnError);
 
+    var isThrottling = false;
     var buffer;
     Timer timer = new Timer(duration, () {});
     input.listen((x) {
         // if this is the first item then push it
-        if (buffer == null) {
+        if (!isThrottling) {
           _tryAdd(controller, x);
-          buffer = x;
+          isThrottling = true;
+
+          new Timer(duration, () => isThrottling = false);
         } else {
           buffer = x;
+          isThrottling = true;
 
           new Timer(duration, () {
             // when the timer callback is invoked after the timeout, check if there has been any
@@ -87,14 +91,17 @@ class StreamExt {
             // superceded by a subsequent event
             if (buffer == x) {
               _tryAdd(controller, x);
-              buffer = null; // reset
+
+              // reset
+              isThrottling = false;
+              buffer = null;
             }
           });
         }
       },
      onError : onError,
      onDone  : () {
-       if (buffer != null) {
+       if (isThrottling && buffer != null) {
          _tryAdd(controller, buffer);
        }
        _tryClose(controller);
