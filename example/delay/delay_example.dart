@@ -1,8 +1,7 @@
 library delay_example;
 
-import 'dart:html' as html;
+import 'dart:html';
 import 'dart:async';
-import 'package:stagexl/stagexl.dart';
 import 'package:stream_ext/stream_ext.dart';
 
 void main() {
@@ -10,25 +9,23 @@ void main() {
 }
 
 _trackMouse(String message) {
-  var canvas = html.query('#stage');
-  var stage = new Stage('myStage', canvas);
-  var renderLoop = new RenderLoop();
-  renderLoop.addStage(stage);
+  Element container = query('#container');
 
-  var mouseMove = canvas.onMouseMove;
+  Stream mouseMove = container.onMouseMove;
   var chars = new List.generate(message.length, (i) => message[i]);
 
   for (var i = 0; i < chars.length; i++) {
-    var textField = new TextField()
-      ..text = chars[i]
-      ..x = i * 10
-      ..addTo(stage);
+    Element label = new SpanElement()
+      ..text = chars[i];
+    container.children.add(label);
+    label.style.left = "${i * 10}px";
+    label.style.position = "relative";
 
     StreamExt.delay(mouseMove, new Duration(milliseconds : i * 100))
-      ..listen((evt) {
-        textField
-          ..x = evt.clientX + i * 10
-          ..y = evt.clientY;
+      ..listen((MouseEvent evt) {
+        label
+          ..style.left = "${evt.offset.x + i * 10}px"
+          ..style.top  = "${evt.offset.y}px";
       });
   }
 }

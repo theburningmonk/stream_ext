@@ -5,5 +5,4 @@ description: Extension functions for Stream class
 homepage: https://github.com/theburningmonk/stream_ext
 dependencies:
   browser: any
-  stagexl: any
   unittest: any
