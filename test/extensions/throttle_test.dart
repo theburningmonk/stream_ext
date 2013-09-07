@@ -27,9 +27,7 @@ class ThrottleTests {
 
       new Timer(new Duration(milliseconds : 2), () {
         controller.add(4);
-        new Timer(new Duration(milliseconds : 2), () {
-          controller.close();
-        });
+        controller.close();
       });
 
       new Timer(new Duration(milliseconds : 10), () {
