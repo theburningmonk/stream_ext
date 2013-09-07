@@ -2,7 +2,6 @@ library throttle_example;
 
 import 'dart:html';
 import 'dart:async';
-import 'dart:json';
 import 'package:js/js.dart' as js;
 import 'package:stream_ext/stream_ext.dart';
 
@@ -17,7 +16,7 @@ void main() {
   Stream keyUp = searcher.onKeyUp;
 
   StreamExt.throttle(keyUp, new Duration(milliseconds : 250))
-    .listen((_) {
+    .listen((KeyboardEvent evt) {
       queryWikipedia(searcher.value);
     });
 }

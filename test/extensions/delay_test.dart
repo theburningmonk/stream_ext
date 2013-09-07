@@ -12,12 +12,12 @@ class DelayTests {
   void _delayWithNoErrors() {
     test("no errors", () {
       var data    = new List.generate(3, (n) => n);
-      var origin  = new Stream.fromIterable(data);
+      var input   = new Stream.fromIterable(data);
 
       var list    = new List();
       var hasErr  = false;
       var isDone  = false;
-      StreamExt.delay(origin, new Duration(milliseconds : 1), sync : true)
+      StreamExt.delay(input, new Duration(milliseconds : 1), sync : true)
         ..listen(list.add,
                  onError : (_) => hasErr = true,
                  onDone  : ()  => isDone = true);

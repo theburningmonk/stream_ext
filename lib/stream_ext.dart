@@ -70,20 +70,27 @@ class StreamExt {
     var controller = new StreamController.broadcast(sync : sync);
     var onError    = _getOnErrorHandler(controller, closeOnError);
 
-    var lastItem;
+    var buffer;
     Timer timer = new Timer(duration, () {});
     input.listen((x) {
-        lastItem = x;
+        // if this is the first item then push it
+        if (buffer == null) {
+          controller.add(x);
+          buffer = x;
+        } else {
+          buffer = x;
 
-        new Timer(duration, () {
-          // when the timer callback is invoked after the timeout, check if there has been any
-          // new items by comparing the last item against our captured closure 'x'
-          // only push the event to the output stream if the captured event has not been
-          // superceded by a subsequent event
-          if (lastItem == x) {
-            controller.add(x);
-          }
-        });
+          new Timer(duration, () {
+            // when the timer callback is invoked after the timeout, check if there has been any
+            // new items by comparing the last item against our captured closure 'x'
+            // only push the event to the output stream if the captured event has not been
+            // superceded by a subsequent event
+            if (buffer == x) {
+              controller.add(x);
+              buffer = null; // reset
+            }
+          });
+        }
       },
      onError : onError,
      onDone  : () => _tryClose(controller));
