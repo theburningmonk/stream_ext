@@ -9,7 +9,7 @@ class ThrottleTests {
 
   void _throttleWithNoErrors() {
     test("no errors", () {
-      var controller = new StreamController.broadcast();
+      var controller = new StreamController.broadcast(sync : true);
       var input      = controller.stream;
 
       var list    = new List();
