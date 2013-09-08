@@ -66,8 +66,8 @@ class DelayTests {
           expect(list.where((n) => n == i).length, equals(1), reason : "delayed stream should contain $i");
         }
 
-        expect(hasErr, equals(true), reason : "merged stream should have received error");
-        expect(isDone, equals(true), reason : "merged stream should be completed");
+        expect(hasErr, equals(true), reason : "delayed stream should have received error");
+        expect(isDone, equals(true), reason : "delayed stream should be completed");
       });
     });
   }
@@ -98,8 +98,8 @@ class DelayTests {
         expect(list.length, equals(1), reason : "delayed stream should have only event before error");
         expect(list[0], equals(0), reason : "delayed stream should contain the event value 0");
 
-        expect(hasErr, equals(true), reason : "merged stream should have received error");
-        expect(isDone, equals(true), reason : "merged stream should be completed");
+        expect(hasErr, equals(true), reason : "delayed stream should have received error");
+        expect(isDone, equals(true), reason : "delayed stream should be completed");
       });
     });
   }

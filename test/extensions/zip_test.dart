@@ -40,8 +40,8 @@ class ZipTests {
         expect(list, equals([ "0, 3", "1, 4", "2, 5" ]),
                reason : "zipped stream should contain values (0, 3), (1, 4) and (2, 5)");
 
-        expect(hasErr, equals(false), reason : "delayed stream should not have received error");
-        expect(isDone, equals(true),  reason : "delayed stream should be completed");
+        expect(hasErr, equals(false), reason : "zipped stream should not have received error");
+        expect(isDone, equals(true),  reason : "zipped stream should be completed");
       });
     });
   }
@@ -79,8 +79,8 @@ class ZipTests {
         expect(list, equals([ "0, 3", "1, 4", "2, 5" ]),
                reason : "zipped stream should contain values (0, 3), (1, 4) and (2, 5)");
 
-        expect(hasErr, equals(true), reason : "delayed stream should have received error");
-        expect(isDone, equals(true), reason : "delayed stream should be completed");
+        expect(hasErr, equals(true), reason : "zipped stream should have received error");
+        expect(isDone, equals(true), reason : "zipped stream should be completed");
       });
     });
   }
@@ -114,8 +114,8 @@ class ZipTests {
         expect(list, equals([ "0, 3" ]),
                reason : "zipped stream should contain values (0, 3)");
 
-        expect(hasErr, equals(true), reason : "delayed stream should have received error");
-        expect(isDone, equals(true), reason : "delayed stream should be completed");
+        expect(hasErr, equals(true), reason : "zipped stream should have received error");
+        expect(isDone, equals(true), reason : "zipped stream should be completed");
       });
     });
   }

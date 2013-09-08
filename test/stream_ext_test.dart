@@ -9,6 +9,7 @@ part "extensions/delay_test.dart";
 part "extensions/merge_test.dart";
 part "extensions/throttle_test.dart";
 part "extensions/zip_test.dart";
+part "extensions/window_test.dart";
 
 main() {
   new MergeTests().start();
@@ -16,4 +17,5 @@ main() {
   new ThrottleTests().start();
   new ZipTests().start();
   new CombineLatestTests().start();
+  new WindowTests().start();
 }

@@ -36,8 +36,8 @@ class ThrottleTests {
         expect(list.length, equals(3),   reason : "throttled stream should have only three events");
         expect(list, equals([ 0, 3, 4]), reason : "throttled stream should contain values 0, 3 and 4");
 
-        expect(hasErr, equals(false), reason : "delayed stream should not have received error");
-        expect(isDone, equals(true),  reason : "delayed stream should be completed");
+        expect(hasErr, equals(false), reason : "throttled stream should not have received error");
+        expect(isDone, equals(true),  reason : "throttled stream should be completed");
       });
     });
   }
@@ -70,8 +70,8 @@ class ThrottleTests {
         expect(list.length, equals(3),   reason : "throttled stream should have only three events");
         expect(list, equals([ 0, 3, 4]), reason : "throttled stream should contain values 0, 3 and 4");
 
-        expect(hasErr, equals(true), reason : "delayed stream should have received error");
-        expect(isDone, equals(true),  reason : "delayed stream should be completed");
+        expect(hasErr, equals(true), reason : "throttled stream should have received error");
+        expect(isDone, equals(true), reason : "throttled stream should be completed");
       });
     });
   }
@@ -106,8 +106,8 @@ class ThrottleTests {
         expect(list.length, equals(3),   reason : "throttled stream should have only three events");
         expect(list, equals([ 0, 3, 4]), reason : "throttled stream should contain values 0, 3 and 4");
 
-        expect(hasErr, equals(true), reason : "delayed stream should have received error");
-        expect(isDone, equals(true),  reason : "delayed stream should be completed");
+        expect(hasErr, equals(true), reason : "throttled stream should have received error");
+        expect(isDone, equals(true), reason : "throttled stream should be completed");
       });
     });
   }

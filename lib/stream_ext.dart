@@ -185,4 +185,36 @@ class StreamExt {
 
     return controller.stream;
   }
+
+  /// Projects each element from the input stream into consecutive non-overlapping windows. Each event produced by the output
+  /// stream will contain a list of elements up to the specified count.
+  /// The output stream will complete if:
+  /// * the input stream has completed and any buffered elements have been pushed
+  /// * [closeOnError] flag is set to true and an error is received
+  static Stream window(Stream input, int count, { bool closeOnError : false, bool sync : false }) {
+    var controller = new StreamController.broadcast(sync : sync);
+    var onError    = _getOnErrorHandler(controller, closeOnError);
+
+    var elements   = new List();
+
+    void handleNewEvent(x) {
+      elements.add(x);
+      if (elements.length == count) {
+        _tryAdd(controller, elements.toList()); // add a clone instead of the buffer list
+        elements.clear();
+      }
+    }
+
+    input.listen(handleNewEvent,
+                 onError : onError,
+                 onDone  : () {
+                   if (elements.length > 0) {
+                     _tryAdd(controller, elements.toList()); // add a clone instead of the buffer list
+                   }
+
+                   _tryClose(controller);
+                 });
+
+    return controller.stream;
+  }
 }
