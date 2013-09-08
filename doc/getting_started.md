@@ -87,6 +87,21 @@ The zipped stream will complete if:
         .where((_) => isDragging);
 
 
+### window
+
+The `StreamExt.window` function projects each element from the input stream into consecutive non-overlapping windows.
+Each element proudced by the output stream contains a list of elements up to the specified count.
+
+The output stream will complete if:
+* the input stream has completed and any buffered elements have been upshed
+* [closeOnError] flag is set to true and an error is received
+
+**Dart code**
+
+    var input 	 = new StreamController.broadcast().stream;
+    var windowed = StreamExt.window(input, 3);
+
+
 ## Examples
 
 Please take a look at the **example** directory for more complete and meaningful usages of each of the extension functions.

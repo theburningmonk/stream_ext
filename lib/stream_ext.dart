@@ -186,8 +186,8 @@ class StreamExt {
     return controller.stream;
   }
 
-  /// Projects each element from the input stream into consecutive non-overlapping windows. Each event produced by the output
-  /// stream will contain a list of elements up to the specified count.
+  /// Projects each element from the input stream into consecutive non-overlapping windows. Each element produced by the output
+  /// stream will contains a list of elements up to the specified count.
   /// The output stream will complete if:
   /// * the input stream has completed and any buffered elements have been pushed
   /// * [closeOnError] flag is set to true and an error is received
