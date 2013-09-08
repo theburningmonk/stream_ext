@@ -7948,7 +7948,10 @@ StateError: {"": "Error;message",
 
 ConcurrentModificationError: {"": "Error;modifiedObject",
   toString$0: function(_) {
-    return "Concurrent modification during iteration: " + $.Error_safeToString(this.modifiedObject) + ".";
+    var t1 = this.modifiedObject;
+    if (t1 == null)
+      return "Concurrent modification during iteration.";
+    return "Concurrent modification during iteration: " + $.Error_safeToString(t1) + ".";
   },
   "+toString:0:0": 0
 },
@@ -11156,7 +11159,8 @@ StreamExt_throttle: function(input, duration, closeOnError, sync) {
   t1 = {};
   controller = $.StreamController_StreamController$broadcast(null, null, sync);
   $.StreamExt__getOnErrorHandler(controller, closeOnError);
-  t1.buffer_0 = null;
+  t1.isThrottling_0 = false;
+  t1.buffer_1 = null;
   timer = new $._ZoneTimer($.get$_Zone__current(), new $.StreamExt_throttle_closure(), null);
   t2 = timer._zone;
   t2._openCallbacks = t2._openCallbacks + 1;
@@ -11193,17 +11197,22 @@ StreamExt_throttle_closure0: {"": "Closure;box_0,duration_1,controller_2",
     var t1, t2, t3;
     t1 = this.box_0;
     t2 = this.controller_2;
-    if (t1.buffer_0 == null) {
+    if (!t1.isThrottling_0) {
       t3 = t2._state;
       if ((t3 & 4) === 0) {
         if (t3 >= 4)
           $.throwExpression(t2._addEventError$0());
         t2._sendData$1(x);
       }
-      t1.buffer_0 = x;
+      t1.isThrottling_0 = true;
+      t1 = new $._ZoneTimer($.get$_Zone__current(), new $.StreamExt_throttle__closure(t1), null);
+      t2 = t1._zone;
+      t2._openCallbacks = t2._openCallbacks + 1;
+      t1._timer = $._createTimer(this.duration_1, t1.get$_run());
     } else {
-      t1.buffer_0 = x;
-      t1 = new $._ZoneTimer($.get$_Zone__current(), new $.StreamExt_throttle__closure(t1, t2, x), null);
+      t1.buffer_1 = x;
+      t1.isThrottling_0 = true;
+      t1 = new $._ZoneTimer($.get$_Zone__current(), new $.StreamExt_throttle__closure0(t1, t2, x), null);
       t2 = t1._zone;
       t2._openCallbacks = t2._openCallbacks + 1;
       t1._timer = $._createTimer(this.duration_1, t1.get$_run());
@@ -11215,12 +11224,23 @@ StreamExt_throttle_closure0: {"": "Closure;box_0,duration_1,controller_2",
 
 "+StreamExt_throttle_closure": [],
 
-StreamExt_throttle__closure: {"": "Closure;box_0,controller_3,x_4",
+StreamExt_throttle__closure: {"": "Closure;box_0",
+  call$0: function() {
+    this.box_0.isThrottling_0 = false;
+    return false;
+  },
+  "+call:0:0": 0,
+  $isFunction: true
+},
+
+"+StreamExt_throttle__closure": [],
+
+StreamExt_throttle__closure0: {"": "Closure;box_0,controller_3,x_4",
   call$0: function() {
     var t1, t2, t3, t4;
     t1 = this.box_0;
     t2 = this.x_4;
-    if ($.$eq(t1.buffer_0, t2)) {
+    if ($.$eq(t1.buffer_1, t2)) {
       t3 = this.controller_3;
       t4 = t3._state;
       if ((t4 & 4) === 0) {
@@ -11228,7 +11248,8 @@ StreamExt_throttle__closure: {"": "Closure;box_0,controller_3,x_4",
           $.throwExpression(t3._addEventError$0());
         t3._sendData$1(t2);
       }
-      t1.buffer_0 = null;
+      t1.isThrottling_0 = false;
+      t1.buffer_1 = null;
     }
   },
   "+call:0:0": 0,
@@ -11237,12 +11258,23 @@ StreamExt_throttle__closure: {"": "Closure;box_0,controller_3,x_4",
 
 "+StreamExt_throttle__closure": [],
 
-StreamExt_throttle_closure1: {"": "Closure;controller_5",
+StreamExt_throttle_closure1: {"": "Closure;box_0,controller_5",
   call$0: function() {
-    var t1 = this.controller_5;
+    var t1, t2, t3;
+    t1 = this.box_0;
+    if (t1.isThrottling_0 && t1.buffer_1 != null) {
+      t2 = this.controller_5;
+      t1 = t1.buffer_1;
+      t3 = t2._state;
+      if ((t3 & 4) === 0) {
+        if (t3 >= 4)
+          $.throwExpression(t2._addEventError$0());
+        t2._sendData$1(t1);
+      }
+    }
+    t1 = this.controller_5;
     if ((t1._state & 4) === 0)
       t1.close$0(t1);
-    return;
   },
   "+call:0:0": 0,
   $isFunction: true

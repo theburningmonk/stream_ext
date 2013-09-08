@@ -24,6 +24,15 @@ $$.Bound_addError__BroadcastStreamController = {"": "BoundClosure;_self,_liblib1
   }
 };
 
+$$.Bound_complete__Completer = {"": "BoundClosure;_self,_liblib1$_target,_receiver",
+  call$1: function(p0) {
+    return this._self[this._liblib1$_target](this._receiver, p0);
+  },
+  call$0: function() {
+    return this.call$1(null);
+  }
+};
+
 $$.BoundClosure$1 = {"": "BoundClosure;_self,_liblib1$_target,_receiver",
   call$1: function(p0) {
     return this._self[this._liblib1$_target](p0);
@@ -819,7 +828,7 @@ _BaseSendPort: {"": "Object;_isolateId<",
     completer._Completer$0();
     port = $.ReceivePortImpl$();
     this.send$2(message, new $._NativeJsSendPort(port, $globalState.currentContext.id));
-    port._liblib4$_callback = new $._BaseSendPort_call_closure(completer, port);
+    port._callback = new $._BaseSendPort_call_closure(completer, port);
     return completer.future;
   },
   $isSendPort: true
@@ -828,7 +837,7 @@ _BaseSendPort: {"": "Object;_isolateId<",
 _BaseSendPort_call_closure: {"": "Closure;completer_0,port_1",
   call$2: function(value, ignoreReplyTo) {
     var t1 = this.port_1;
-    t1._liblib4$_callback = null;
+    t1._callback = null;
     $globalState.currentContext.unregister$1(t1._id);
     t1 = this.completer_0;
     if (typeof value === "object" && value !== null && !!$.getInterceptor(value).$isException)
@@ -865,7 +874,7 @@ _NativeJsSendPort_send_closure: {"": "Closure;this_1,message_2,replyTo_3",
     isolate = t4.$index(t4, t2.get$_isolateId());
     if (isolate == null)
       return;
-    if (t2.get$_receivePort().get$_liblib4$_callback() == null)
+    if (t2.get$_receivePort().get$_callback() == null)
       return;
     shouldSerialize = $globalState.currentContext != null && $globalState.currentContext.id !== t2.get$_isolateId();
     msg = this.message_2;
@@ -886,14 +895,14 @@ _NativeJsSendPort_send__closure: {"": "Closure;box_0,this_4,shouldSerialize_5",
   call$0: function() {
     var t1, t2;
     t1 = this.this_4;
-    if (t1.get$_receivePort().get$_liblib4$_callback() != null) {
+    if (t1.get$_receivePort().get$_callback() != null) {
       if (this.shouldSerialize_5) {
         t2 = this.box_0;
         t2.msg_0 = $._deserializeMessage(t2.msg_0);
         t2.reply_1 = $._deserializeMessage(t2.reply_1);
       }
       t2 = this.box_0;
-      t1.get$_receivePort()._liblib4$_callback$2(t2.msg_0, t2.reply_1);
+      t1.get$_receivePort()._callback$2(t2.msg_0, t2.reply_1);
     }
   }
 },
@@ -948,9 +957,9 @@ _WorkerSendPort_send_closure: {"": "Closure;this_0,message_1,replyTo_2",
   }
 },
 
-ReceivePortImpl: {"": "Object;_id<,_liblib4$_callback<",
-  _liblib4$_callback$2: function(arg0, arg1) {
-    return this._liblib4$_callback.call$2(arg0, arg1);
+ReceivePortImpl: {"": "Object;_id<,_callback<",
+  _callback$2: function(arg0, arg1) {
+    return this._callback.call$2(arg0, arg1);
   },
   ReceivePortImpl$0: function() {
     var t1 = $globalState.currentContext;
@@ -2438,6 +2447,20 @@ runAsync: function(callback) {
   currentZone.runAsync$2(callback, currentZone);
 },
 
+StreamController_StreamController$broadcast: function(onCancel, onListen, sync) {
+  var t1;
+  if (sync) {
+    t1 = new $._SyncBroadcastStreamController(onListen, onCancel, 0, null, null, null, null);
+    t1._previous = t1;
+    t1._next = t1;
+  } else {
+    t1 = new $._AsyncBroadcastStreamController(onListen, onCancel, 0, null, null, null, null);
+    t1._previous = t1;
+    t1._next = t1;
+  }
+  return t1;
+},
+
 _runGuarded: function(notificationHandler) {
   var e, s, exception, t1;
   if (notificationHandler == null)
@@ -2736,6 +2759,9 @@ _Completer: {"": "Object;",
     this._isComplete = true;
     this._setFutureValue$1(value);
   },
+  get$complete: function(_receiver) {
+    return new $.Bound_complete__Completer(this, "complete$1", _receiver);
+  },
   completeError$2: function(error, stackTrace) {
     if (this._isComplete)
       throw $.wrapException(new $.StateError("Future already completed"));
@@ -3008,13 +3034,14 @@ _FutureImpl__FutureImpl$wait: function(futures) {
     t1.remaining_2 = $.$add$ns(pos, 1);
     future.catchError$1(t2).then$1(new $._FutureImpl__FutureImpl$wait_closure(t1, pos));
   }
-  if ($.$eq(t1.remaining_2, 0)) {
+  t2 = t1.remaining_2;
+  if ($.$eq(t2, 0)) {
     t1 = new $._FutureImpl(0, $.get$_Zone__current(), null);
     t1._state = 8;
     t1._resultOrListeners = C.List_empty;
     return t1;
   }
-  t1.values_1 = $.List_List(t1.remaining_2);
+  t1.values_1 = $.List_List(t2);
   completer = new $._AsyncCompleter(new $._FutureImpl(0, $.get$_Zone__current(), null), false);
   completer._Completer$0();
   t1.completer_0 = completer;
@@ -3512,14 +3539,10 @@ _BufferingStreamSubscription__sendError_closure: {"": "Closure;this_0,error_1",
 
 _StreamImpl: {"": "Stream;",
   listen$4$cancelOnError$onDone$onError: function(onData, cancelOnError, onDone, onError) {
-    if (onError == null)
-      onError = $._nullErrorHandler$closure;
-    if (onDone == null)
-      onDone = $._nullDoneHandler$closure;
     return this._createSubscription$4(onData, onError, onDone, true === cancelOnError);
   },
-  listen$1: function(onData) {
-    return this.listen$4$cancelOnError$onDone$onError(onData, null, null, null);
+  listen$3$onDone$onError: function(onData, onDone, onError) {
+    return this.listen$4$cancelOnError$onDone$onError(onData, null, onDone, onError);
   },
   _createSubscription$4: function(onData, onError, onDone, cancelOnError) {
     return $._BufferingStreamSubscription$(onData, onError, onDone, cancelOnError);
@@ -3681,11 +3704,11 @@ _DefaultZone_runAsync_closure: {"": "Closure;f_0,zone_1",
   }
 },
 
-_ZoneTimer: {"": "Object;_zone<,_callback,_timer",
+_ZoneTimer: {"": "Object;_zone<,_liblib3$_callback,_timer",
   _run$0: function() {
     var t1 = this._zone;
     t1._openCallbacks = t1._openCallbacks - 1;
-    t1._runInZone$2(this._callback, true);
+    t1._runInZone$2(this._liblib3$_callback, true);
   },
   get$_run: function() {
     return new $.BoundClosure$0(this, "_run$0", null);
@@ -4554,22 +4577,6 @@ List_List$from: function(other, growable) {
   return fixedList;
 },
 
-List_List$generate: function($length, generator, growable) {
-  var result, i, t1;
-  if (growable) {
-    result = [];
-    C.JSArray_methods.set$length(result, $length);
-  } else
-    result = $.List_List($length);
-  for (i = 0; i < $length; ++i) {
-    t1 = generator.call$1(i);
-    if (i >= result.length)
-      throw $.ioore(i);
-    result[i] = t1;
-  }
-  return result;
-},
-
 NoSuchMethodError_toString_closure: {"": "Closure;box_0",
   call$2: function(key, value) {
     var t1 = this.box_0;
@@ -4822,33 +4829,6 @@ StringBuffer$: function($content) {
 
 }}],
 ["dart.dom.html", "dart:html", , {
-_convertNativeToDart_EventTarget: function(e) {
-  var $window;
-  if (e == null)
-    return;
-  if ("setInterval" in e) {
-    $window = $._DOMWindowCrossFrame__createSafe(e);
-    if (typeof $window === "object" && $window !== null && !!$.getInterceptor($window).$isEventTarget)
-      return $window;
-    return;
-  } else
-    return e;
-},
-
-Interceptor_CssStyleDeclarationBase: {"": "Interceptor+CssStyleDeclarationBase;"},
-
-CssStyleDeclarationBase: {"": "Object;",
-  set$left: function(receiver, value) {
-    this.setProperty$3(receiver, "left", value, "");
-  },
-  set$position: function(receiver, value) {
-    this.setProperty$3(receiver, "position", value, "");
-  },
-  set$top: function(receiver, value) {
-    this.setProperty$3(receiver, "top", value, "");
-  }
-},
-
 _ChildrenElementList: {"": "ListBase;_element,_childElements",
   get$length: function(_) {
     return this._childElements.length;
@@ -4952,145 +4932,6 @@ ImmutableListMixin: {"": "Object;",
   $asList: null
 },
 
-Point: {"": "Object;x>,y>",
-  toString$0: function(_) {
-    return "(" + $.S(this.x) + ", " + $.S(this.y) + ")";
-  },
-  $eq: function(_, other) {
-    if (other == null)
-      return false;
-    if (typeof other !== "object" || other === null || !$.getInterceptor(other).$isPoint)
-      return false;
-    return $.$eq(this.x, other.x) && $.$eq(this.y, other.y);
-  },
-  get$hashCode: function(_) {
-    var t1, t2;
-    t1 = $.get$hashCode$(this.x);
-    t2 = $.get$hashCode$(this.y);
-    return $.JenkinsSmiHash_finish($.JenkinsSmiHash_combine($.JenkinsSmiHash_combine(0, t1), t2));
-  },
-  $add: function(_, other) {
-    var t1, t2, t3;
-    t1 = this.x;
-    if (typeof t1 !== "number")
-      return this.$$add$bailout(1, other, t1);
-    t2 = $.getInterceptor$x(other);
-    t3 = t2.get$x(other);
-    if (typeof t3 !== "number")
-      return this.$$add$bailout(2, other, t1, t2, t3);
-    t3 = t1 + t3;
-    t1 = this.y;
-    if (typeof t1 !== "number")
-      return this.$$add$bailout(3, other, t1, t2, t3);
-    t2 = t2.get$y(other);
-    if (typeof t2 !== "number")
-      return this.$$add$bailout(4, 0, t1, t2, t3);
-    return new $.Point(t3, t1 + t2);
-  },
-  $$add$bailout: function(state0, other, t1, t2, t3) {
-    switch (state0) {
-      case 0:
-        t1 = this.x;
-      case 1:
-        state0 = 0;
-        t2 = $.getInterceptor$x(other);
-        t3 = t2.get$x(other);
-      case 2:
-        state0 = 0;
-        t3 = $.$add$ns(t1, t3);
-        t1 = this.y;
-      case 3:
-        state0 = 0;
-        t2 = t2.get$y(other);
-      case 4:
-        state0 = 0;
-        return new $.Point(t3, $.$add$ns(t1, t2));
-    }
-  },
-  $sub: function(_, other) {
-    var t1, t2, t3;
-    t1 = this.x;
-    if (typeof t1 !== "number")
-      return this.$$sub$bailout(1, other, t1);
-    t2 = $.getInterceptor$x(other);
-    t3 = t2.get$x(other);
-    if (typeof t3 !== "number")
-      return this.$$sub$bailout(2, other, t1, t2, t3);
-    t3 = t1 - t3;
-    t1 = this.y;
-    if (typeof t1 !== "number")
-      return this.$$sub$bailout(3, other, t1, t2, t3);
-    t2 = t2.get$y(other);
-    if (typeof t2 !== "number")
-      return this.$$sub$bailout(4, 0, t1, t2, t3);
-    return new $.Point(t3, t1 - t2);
-  },
-  $$sub$bailout: function(state0, other, t1, t2, t3) {
-    switch (state0) {
-      case 0:
-        t1 = this.x;
-      case 1:
-        state0 = 0;
-        t2 = $.getInterceptor$x(other);
-        t3 = t2.get$x(other);
-      case 2:
-        state0 = 0;
-        t3 = $.$sub$n(t1, t3);
-        t1 = this.y;
-      case 3:
-        state0 = 0;
-        t2 = t2.get$y(other);
-      case 4:
-        state0 = 0;
-        return new $.Point(t3, $.$sub$n(t1, t2));
-    }
-  },
-  toInt$0: function(_) {
-    return new $.Point($.toInt$0$nx(this.x), $.toInt$0$nx(this.y));
-  },
-  $isPoint: true
-},
-
-RectBase: {"": "Object;",
-  toString$0: function(_) {
-    return "(" + $.S(this.get$left(this)) + ", " + $.S(this.get$top(this)) + ", " + $.S(this.get$width(this)) + ", " + $.S(this.get$height(this)) + ")";
-  },
-  $eq: function(_, other) {
-    var t1;
-    if (other == null)
-      return false;
-    if (typeof other !== "object" || other === null || !$.getInterceptor(other).$isRect)
-      return false;
-    t1 = $.getInterceptor$x(other);
-    return $.$eq(this.get$left(this), t1.get$left(other)) && $.$eq(this.get$top(this), t1.get$top(other)) && $.$eq(this.get$width(this), t1.get$width(other)) && $.$eq(this.get$height(this), t1.get$height(other));
-  },
-  get$hashCode: function(_) {
-    var t1, t2, t3, t4;
-    t1 = $.get$hashCode$(this.get$left(this));
-    t2 = $.get$hashCode$(this.get$top(this));
-    t3 = $.get$hashCode$(this.get$width(this));
-    t4 = $.get$hashCode$(this.get$height(this));
-    return $.JenkinsSmiHash_finish($.JenkinsSmiHash_combine($.JenkinsSmiHash_combine($.JenkinsSmiHash_combine($.JenkinsSmiHash_combine(0, t1), t2), t3), t4));
-  },
-  toInt$0: function(_) {
-    return new $.Rect($.toInt$0$nx(this.get$left(this)), $.toInt$0$nx(this.get$top(this)), $.toInt$0$nx(this.get$width(this)), $.toInt$0$nx(this.get$height(this)));
-  },
-  get$topLeft: function(_) {
-    return new $.Point(this.get$left(this), this.get$top(this));
-  }
-},
-
-Rect: {"": "RectBase;left>,top>,width>,height>", $isRect: true, $asRect: null},
-
-_DOMWindowCrossFrame: {"": "Object;_window", static: {
-_DOMWindowCrossFrame__createSafe: function(w) {
-  if (w === window)
-    return w;
-  else
-    return new $._DOMWindowCrossFrame(w);
-}}
-},
-
 FixedSizeListIterator: {"": "Object;_array,_length,_position,_current",
   moveNext$0: function() {
     var t1, nextPosition;
@@ -5157,22 +4998,6 @@ AnchorElement: {"": "HtmlElement;",
 
 CharacterData: {"": "Node;length="},
 
-CssStyleDeclaration: {"": "Interceptor_CssStyleDeclarationBase;length=",
-  setProperty$3: function(receiver, propertyName, value, priority) {
-    var exception;
-    try {
-      if (priority == null)
-        priority = "";
-      receiver.setProperty(propertyName, value, priority);
-      if (!!receiver.setAttribute)
-        receiver.setAttribute(propertyName, value);
-    } catch (exception) {
-      $.unwrapException(exception);
-    }
-
-  }
-},
-
 DomException: {"": "Interceptor;",
   toString$0: function(receiver) {
     return receiver.toString();
@@ -5183,20 +5008,12 @@ Element: {"": "Node;$$dom_children:children=",
   get$children: function(receiver) {
     return new $._ChildrenElementList(receiver, this.get$$$dom_children(receiver));
   },
-  get$offset: function(receiver) {
-    return new $.Rect(receiver.offsetLeft, receiver.offsetTop, receiver.offsetWidth, receiver.offsetHeight);
-  },
   toString$0: function(receiver) {
     return receiver.localName;
-  },
-  getBoundingClientRect$0: function(receiver) {
-    return receiver.getBoundingClientRect();
   },
   $isElement: true,
   $asElement: null
 },
-
-Event: {"": "Interceptor;"},
 
 EventTarget: {"": "Interceptor;",
   $$dom_addEventListener$3: function(receiver, type, listener, useCapture) {
@@ -5204,9 +5021,7 @@ EventTarget: {"": "Interceptor;",
   },
   $$dom_removeEventListener$3: function(receiver, type, listener, useCapture) {
     return receiver.removeEventListener(type, $.convertDartClosureToJS(listener, 1), useCapture);
-  },
-  $isEventTarget: true,
-  $asEventTarget: null
+  }
 },
 
 FormElement: {"": "HtmlElement;length="},
@@ -5237,25 +5052,7 @@ HtmlCollection: {"": "Interceptor_ListMixin_ImmutableListMixin;",
   $isJavaScriptIndexingBehavior: true
 },
 
-ImageElement: {"": "HtmlElement;x=,y="},
-
-InputElement: {"": "HtmlElement;", $isElement: true, $asElement: null, $isEventTarget: true, $asEventTarget: null},
-
-MouseEvent: {"": "UIEvent;",
-  get$offset: function(receiver) {
-    var t1;
-    if (!!receiver.offsetX)
-      return new $.Point(receiver.offsetX, receiver.offsetY);
-    else {
-      t1 = $._convertNativeToDart_EventTarget(receiver.target);
-      if (typeof t1 !== "object" || t1 === null || !$.getInterceptor(t1).$isElement)
-        throw $.wrapException(new $.UnsupportedError("offsetX is only supported on elements"));
-      t1 = new $.Point(receiver.clientX, receiver.clientY);
-      t1 = t1.$sub(t1, $.get$topLeft$x($.getBoundingClientRect$0$x($._convertNativeToDart_EventTarget(receiver.target))));
-      return new $.Point($.toInt$0$nx(t1.x), $.toInt$0$nx(t1.y));
-    }
-  }
-},
+InputElement: {"": "HtmlElement;", $isElement: true, $asElement: null},
 
 Node: {"": "EventTarget;",
   replaceWith$1: function(receiver, otherNode) {
@@ -5306,114 +5103,12 @@ NodeList: {"": "Interceptor_ListMixin_ImmutableListMixin0;",
 
 SelectElement: {"": "HtmlElement;length="},
 
-UIEvent: {"": "Event;"},
-
 Window: {"": "EventTarget;",
   toString$0: function(receiver) {
     return receiver.toString();
   }
-},
-
-_ClientRect: {"": "Interceptor;height=,left=,top=,width=",
-  toString$0: function(receiver) {
-    return "(" + $.S(receiver.left) + ", " + $.S(receiver.top) + ", " + $.S(receiver.width) + ", " + $.S(receiver.height) + ")";
-  },
-  $eq: function(receiver, other) {
-    var t1, t2, t3;
-    if (other == null)
-      return false;
-    if (typeof other !== "object" || other === null || !$.getInterceptor(other).$isRect)
-      return false;
-    t1 = receiver.left;
-    t2 = $.getInterceptor$x(other);
-    t3 = t2.get$left(other);
-    if (t1 == null ? t3 == null : t1 === t3) {
-      t1 = receiver.top;
-      t3 = t2.get$top(other);
-      if (t1 == null ? t3 == null : t1 === t3) {
-        t1 = receiver.width;
-        t3 = t2.get$width(other);
-        if (t1 == null ? t3 == null : t1 === t3) {
-          t1 = receiver.height;
-          t2 = t2.get$height(other);
-          t2 = t1 == null ? t2 == null : t1 === t2;
-          t1 = t2;
-        } else
-          t1 = false;
-      } else
-        t1 = false;
-    } else
-      t1 = false;
-    return t1;
-  },
-  get$hashCode: function(receiver) {
-    var t1, t2, t3, t4;
-    t1 = $.get$hashCode$(receiver.left);
-    t2 = $.get$hashCode$(receiver.top);
-    t3 = $.get$hashCode$(receiver.width);
-    t4 = $.get$hashCode$(receiver.height);
-    return $.JenkinsSmiHash_finish($.JenkinsSmiHash_combine($.JenkinsSmiHash_combine($.JenkinsSmiHash_combine($.JenkinsSmiHash_combine(0, t1), t2), t3), t4));
-  },
-  toInt$0: function(receiver) {
-    return new $.Rect($.toInt$0$nx(receiver.left), $.toInt$0$nx(receiver.top), $.toInt$0$nx(receiver.width), $.toInt$0$nx(receiver.height));
-  },
-  get$topLeft: function(receiver) {
-    return new $.Point(receiver.left, receiver.top);
-  },
-  $isRect: true,
-  $asRect: null
 }}],
 ["dart.dom.svg", "dart:svg", , {
-FEBlendElement: {"": "SvgElement;x=,y="},
-
-FEColorMatrixElement: {"": "SvgElement;x=,y="},
-
-FEComponentTransferElement: {"": "SvgElement;x=,y="},
-
-FECompositeElement: {"": "SvgElement;x=,y="},
-
-FEConvolveMatrixElement: {"": "SvgElement;x=,y="},
-
-FEDiffuseLightingElement: {"": "SvgElement;x=,y="},
-
-FEDisplacementMapElement: {"": "SvgElement;x=,y="},
-
-FEFloodElement: {"": "SvgElement;x=,y="},
-
-FEGaussianBlurElement: {"": "SvgElement;x=,y="},
-
-FEImageElement: {"": "SvgElement;x=,y="},
-
-FEMergeElement: {"": "SvgElement;x=,y="},
-
-FEMorphologyElement: {"": "SvgElement;x=,y="},
-
-FEOffsetElement: {"": "SvgElement;x=,y="},
-
-FEPointLightElement: {"": "SvgElement;x=,y="},
-
-FESpecularLightingElement: {"": "SvgElement;x=,y="},
-
-FESpotLightElement: {"": "SvgElement;x=,y="},
-
-FETileElement: {"": "SvgElement;x=,y="},
-
-FETurbulenceElement: {"": "SvgElement;x=,y="},
-
-FilterElement: {"": "SvgElement;x=,y="},
-
-ForeignObjectElement: {"": "GraphicsElement;x=,y="},
-
-GraphicsElement: {"": "SvgElement;"},
-
-ImageElement0: {"": "GraphicsElement;x=,y="},
-
-MaskElement: {"": "SvgElement;x=,y="},
-
-PatternElement: {"": "SvgElement;x=,y="},
-
-RectElement: {"": "GraphicsElement;x=,y="},
-
 SvgElement: {"": "Element;",
   get$children: function(receiver) {
     return new $.FilteredElementList(receiver, new $._ChildNodeListLazy(receiver));
@@ -5421,15 +5116,7 @@ SvgElement: {"": "Element;",
   get$$$dom_children: function(receiver) {
     throw $.wrapException(new $.UnsupportedError("Cannot get dom_children on SVG."));
   }
-},
-
-SvgSvgElement: {"": "GraphicsElement;x=,y="},
-
-TextContentElement: {"": "GraphicsElement;"},
-
-TextPositioningElement: {"": "TextContentElement;x=,y="},
-
-UseElement: {"": "GraphicsElement;x=,y="}}],
+}}],
 ["dart.isolate", "dart:isolate", , {
 _Isolate_port: function() {
   if ($.lazyPort == null)
@@ -5527,97 +5214,7 @@ Uint8List: {"": "TypedData_ListMixin_FixedLengthListMixin;",
   $isList: true,
   $isJavaScriptIndexingBehavior: true
 }}],
-["delay_example", "delay_example.dart", , {
-main: function() {
-  $._trackMouse("Time flies like an arrow");
-},
-
-_trackMouse: function(message) {
-  var container, mouseMove, chars, box_0, t1, t2, t3, label, box_00;
-  container = document.querySelector("#container");
-  container.get$onMouseMove;
-  C.EventStreamProvider_mousemove.forElement$2$useCapture;
-  mouseMove = new $._ElementEventStreamImpl(container, C.EventStreamProvider_mousemove._eventType, false);
-  chars = $.List_List$generate(message.length, new $._trackMouse_closure(message), true);
-  box_0 = {};
-  box_0.i_0 = 0;
-  t1 = $.getInterceptor$x(container);
-  while (true) {
-    t2 = box_0.i_0;
-    t3 = chars.length;
-    if (typeof t2 !== "number")
-      throw t2.$lt();
-    if (!(t2 < t3))
-      break;
-    label = document.createElement("span");
-    t2 = box_0.i_0;
-    if (t2 >>> 0 !== t2 || t2 >= chars.length)
-      throw $.ioore(t2);
-    label.textContent = chars[t2];
-    t2 = t1.get$children(container);
-    t2.add$1(t2, label);
-    t2 = label.style;
-    t3 = box_0.i_0;
-    if (typeof t3 !== "number")
-      throw t3.$mul();
-    $.set$left$x(t2, $.S(t3 * 10) + "px");
-    $.set$position$x(label.style, "relative");
-    t3 = box_0.i_0;
-    if (typeof t3 !== "number")
-      throw t3.$mul();
-    $.StreamExt_delay(mouseMove, new $.Duration(0 + t3 * 100 * 1000 + 0), false, false).listen$1(new $._trackMouse_closure0(box_0, label));
-    box_00 = {};
-    box_00.i_0 = box_0.i_0;
-    t2 = box_00.i_0;
-    if (typeof t2 !== "number")
-      throw t2.$add();
-    box_00.i_0 = t2 + 1;
-    box_0 = box_00;
-  }
-},
-
-_trackMouse_closure: {"": "Closure;message_1",
-  call$1: function(i) {
-    var t1 = this.message_1;
-    if (i >>> 0 !== i || i >= t1.length)
-      throw $.ioore(i);
-    return t1[i];
-  }
-},
-
-_trackMouse_closure0: {"": "Closure;box_0,label_2",
-  call$1: function(evt) {
-    var t1, t2, t3, t4, t5;
-    t1 = this.label_2;
-    t2 = t1.style;
-    t3 = $.getInterceptor$x(evt);
-    t4 = t3.get$offset(evt);
-    t4 = t4.get$x(t4);
-    t5 = this.box_0.i_0;
-    if (typeof t5 !== "number")
-      throw t5.$mul();
-    $.set$left$x(t2, $.S($.$add$ns(t4, t5 * 10)) + "px");
-    t1 = t1.style;
-    t3 = t3.get$offset(evt);
-    $.set$top$x(t1, $.S(t3.get$y(t3)) + "px");
-  }
-}},
-1],
 ["html_common", "dart:html_common", , {
-JenkinsSmiHash_combine: function(hash, value) {
-  if (typeof value !== "number")
-    throw $.iae(value);
-  hash = 536870911 & hash + value;
-  hash = 536870911 & hash + ((524287 & hash) << 10 >>> 0);
-  return (hash ^ C.JSInt_methods.$shr(hash, 6)) >>> 0;
-},
-
-JenkinsSmiHash_finish: function(hash) {
-  hash = 536870911 & hash + ((67108863 & hash) << 3 >>> 0);
-  hash = (hash ^ C.JSInt_methods.$shr(hash, 11)) >>> 0;
-  return 536870911 & hash + ((16383 & hash) << 15 >>> 0);
-},
-
 FilteredElementList: {"": "ListBase;_node,_childNodes",
   get$_filtered: function() {
     var t1 = this._childNodes;
@@ -5656,27 +5253,229 @@ FilteredElementList__filtered_closure: {"": "Closure;",
     return typeof n === "object" && n !== null && !!$.getInterceptor(n).$isElement;
   }
 }}],
+["merge_example", "merge_example.dart", , {
+main: function() {
+  var btn1, btn2, btn3, btnErr1, btnErr2, btnErr3, btnDone1, btnDone2, btnDone3, output, contr1, contr2, contr3, stream1, stream2, stream3, merged, t1, t2;
+  btn1 = document.querySelector("#btn_1");
+  btn2 = document.querySelector("#btn_2");
+  btn3 = document.querySelector("#btn_3");
+  btnErr1 = document.querySelector("#btn_err_1");
+  btnErr2 = document.querySelector("#btn_err_2");
+  btnErr3 = document.querySelector("#btn_err_3");
+  btnDone1 = document.querySelector("#btn_done_1");
+  btnDone2 = document.querySelector("#btn_done_2");
+  btnDone3 = document.querySelector("#btn_done_3");
+  output = document.querySelector("#output");
+  contr1 = $.StreamController_StreamController$broadcast(null, null, false);
+  contr2 = $.StreamController_StreamController$broadcast(null, null, false);
+  contr3 = $.StreamController_StreamController$broadcast(null, null, false);
+  stream1 = new $._BroadcastStream(contr1);
+  stream2 = new $._BroadcastStream(contr2);
+  stream3 = new $._BroadcastStream(contr3);
+  merged = $.StreamExt_merge($.StreamExt_merge(stream1, stream2, false, false), stream3, false, false);
+  t1 = new $.main_log(output);
+  stream1.listen$3$onDone$onError(new $.main_closure(t1), new $.main_closure0(t1), new $.main_closure1(t1));
+  stream2.listen$3$onDone$onError(new $.main_closure2(t1), new $.main_closure3(t1), new $.main_closure4(t1));
+  stream3.listen$3$onDone$onError(new $.main_closure5(t1), new $.main_closure6(t1), new $.main_closure7(t1));
+  merged.listen$3$onDone$onError(new $.main_closure8(t1), new $.main_closure9(t1), new $.main_closure10(t1));
+  btn1.get$onClick;
+  C.EventStreamProvider_click.forElement$2$useCapture;
+  t1 = C.EventStreamProvider_click._eventType;
+  t2 = new $._ElementEventStreamImpl(btn1, t1, false);
+  new $._EventStreamSubscription(0, t2._target, t2._eventType, new $.main_closure11(contr1), t2._useCapture)._tryResume$0();
+  btn2.get$onClick;
+  t2 = new $._ElementEventStreamImpl(btn2, t1, false);
+  new $._EventStreamSubscription(0, t2._target, t2._eventType, new $.main_closure12(contr2), t2._useCapture)._tryResume$0();
+  btn3.get$onClick;
+  t2 = new $._ElementEventStreamImpl(btn3, t1, false);
+  new $._EventStreamSubscription(0, t2._target, t2._eventType, new $.main_closure13(contr3), t2._useCapture)._tryResume$0();
+  btnErr1.get$onClick;
+  t2 = new $._ElementEventStreamImpl(btnErr1, t1, false);
+  new $._EventStreamSubscription(0, t2._target, t2._eventType, new $.main_closure14(contr1), t2._useCapture)._tryResume$0();
+  btnErr2.get$onClick;
+  t2 = new $._ElementEventStreamImpl(btnErr2, t1, false);
+  new $._EventStreamSubscription(0, t2._target, t2._eventType, new $.main_closure15(contr2), t2._useCapture)._tryResume$0();
+  btnErr3.get$onClick;
+  t2 = new $._ElementEventStreamImpl(btnErr3, t1, false);
+  new $._EventStreamSubscription(0, t2._target, t2._eventType, new $.main_closure16(contr3), t2._useCapture)._tryResume$0();
+  btnDone1.get$onClick;
+  t2 = new $._ElementEventStreamImpl(btnDone1, t1, false);
+  new $._EventStreamSubscription(0, t2._target, t2._eventType, new $.main_closure17(contr1), t2._useCapture)._tryResume$0();
+  btnDone2.get$onClick;
+  t2 = new $._ElementEventStreamImpl(btnDone2, t1, false);
+  new $._EventStreamSubscription(0, t2._target, t2._eventType, new $.main_closure18(contr2), t2._useCapture)._tryResume$0();
+  btnDone3.get$onClick;
+  t1 = new $._ElementEventStreamImpl(btnDone3, t1, false);
+  new $._EventStreamSubscription(0, t1._target, t1._eventType, new $.main_closure19(contr3), t1._useCapture)._tryResume$0();
+},
+
+main_log: {"": "Closure;output_0",
+  call$2: function(prefix, value) {
+    var t1, t2;
+    t1 = $.get$children$x(this.output_0);
+    t2 = document.createElement("div");
+    t2.textContent = $.S(prefix) + " - " + $.S(value);
+    return t1.add$1(t1, t2);
+  }
+},
+
+main_closure: {"": "Closure;log_1",
+  call$1: function(x) {
+    return this.log_1.call$2("stream1", x);
+  }
+},
+
+main_closure1: {"": "Closure;log_2",
+  call$1: function(err) {
+    return this.log_2.call$2("stream1", err);
+  }
+},
+
+main_closure0: {"": "Closure;log_3",
+  call$0: function() {
+    return this.log_3.call$2("stream1", "done");
+  }
+},
+
+main_closure2: {"": "Closure;log_4",
+  call$1: function(x) {
+    return this.log_4.call$2("stream2", x);
+  }
+},
+
+main_closure4: {"": "Closure;log_5",
+  call$1: function(err) {
+    return this.log_5.call$2("stream2", err);
+  }
+},
+
+main_closure3: {"": "Closure;log_6",
+  call$0: function() {
+    return this.log_6.call$2("stream2", "done");
+  }
+},
+
+main_closure5: {"": "Closure;log_7",
+  call$1: function(x) {
+    return this.log_7.call$2("stream3", x);
+  }
+},
+
+main_closure7: {"": "Closure;log_8",
+  call$1: function(err) {
+    return this.log_8.call$2("stream3", err);
+  }
+},
+
+main_closure6: {"": "Closure;log_9",
+  call$0: function() {
+    return this.log_9.call$2("stream3", "done");
+  }
+},
+
+main_closure8: {"": "Closure;log_10",
+  call$1: function(x) {
+    return this.log_10.call$2("merged", x);
+  }
+},
+
+main_closure10: {"": "Closure;log_11",
+  call$1: function(err) {
+    return this.log_11.call$2("merged", err);
+  }
+},
+
+main_closure9: {"": "Closure;log_12",
+  call$0: function() {
+    return this.log_12.call$2("merged", "done");
+  }
+},
+
+main_closure11: {"": "Closure;contr1_13",
+  call$1: function(_) {
+    var t1 = this.contr1_13;
+    if (t1._state >= 4)
+      $.throwExpression(t1._addEventError$0());
+    t1._sendData$1("new event");
+    return;
+  }
+},
+
+main_closure12: {"": "Closure;contr2_14",
+  call$1: function(_) {
+    var t1 = this.contr2_14;
+    if (t1._state >= 4)
+      $.throwExpression(t1._addEventError$0());
+    t1._sendData$1("new event");
+    return;
+  }
+},
+
+main_closure13: {"": "Closure;contr3_15",
+  call$1: function(_) {
+    var t1 = this.contr3_15;
+    if (t1._state >= 4)
+      $.throwExpression(t1._addEventError$0());
+    t1._sendData$1("new event");
+    return;
+  }
+},
+
+main_closure14: {"": "Closure;contr1_16",
+  call$1: function(_) {
+    return this.contr1_16.addError$1("new error");
+  }
+},
+
+main_closure15: {"": "Closure;contr2_17",
+  call$1: function(_) {
+    return this.contr2_17.addError$1("new error");
+  }
+},
+
+main_closure16: {"": "Closure;contr3_18",
+  call$1: function(_) {
+    return this.contr3_18.addError$1("new error");
+  }
+},
+
+main_closure17: {"": "Closure;contr1_19",
+  call$1: function(_) {
+    var t1 = this.contr1_19;
+    return t1.close$0(t1);
+  }
+},
+
+main_closure18: {"": "Closure;contr2_20",
+  call$1: function(_) {
+    var t1 = this.contr2_20;
+    return t1.close$0(t1);
+  }
+},
+
+main_closure19: {"": "Closure;contr3_21",
+  call$1: function(_) {
+    var t1 = this.contr3_21;
+    return t1.close$0(t1);
+  }
+}},
+1],
 ["stream_ext", "package:stream_ext/stream_ext.dart", , {
 StreamExt__getOnErrorHandler: function(controller, closeOnError) {
   return closeOnError ? new $.StreamExt__getOnErrorHandler_closure(controller) : controller.get$addError();
 },
 
-StreamExt_delay: function(input, duration, closeOnError, sync) {
-  var controller, t1, t2;
-  if (sync) {
-    controller = new $._SyncBroadcastStreamController(null, null, 0, null, null, null, null);
-    controller._previous = controller;
-    controller._next = controller;
-  } else {
-    controller = new $._AsyncBroadcastStreamController(null, null, 0, null, null, null, null);
-    controller._previous = controller;
-    controller._next = controller;
-  }
-  $.StreamExt__getOnErrorHandler(controller, closeOnError);
-  t1 = new $._EventStreamSubscription(0, input._target, input._eventType, new $.StreamExt_delay_closure(controller, new $.StreamExt_delay_delayCall(duration)), input._useCapture);
-  t2 = t1._onData;
-  if (t2 != null && t1._pauseCount <= 0)
-    $.$$dom_addEventListener$3$x(t1._target, t1._eventType, t2, t1._useCapture);
+StreamExt_merge: function(stream1, stream2, closeOnError, sync) {
+  var controller, completer1, completer2, onError;
+  controller = $.StreamController_StreamController$broadcast(null, null, sync);
+  completer1 = new $._AsyncCompleter(new $._FutureImpl(0, $.get$_Zone__current(), null), false);
+  completer1._Completer$0();
+  completer2 = new $._AsyncCompleter(new $._FutureImpl(0, $.get$_Zone__current(), null), false);
+  completer2._Completer$0();
+  onError = $.StreamExt__getOnErrorHandler(controller, closeOnError);
+  stream1.listen$3$onDone$onError(new $.StreamExt_merge_closure(controller), completer1.get$complete(completer1), onError);
+  stream2.listen$3$onDone$onError(new $.StreamExt_merge_closure0(controller), completer2.get$complete(completer2), onError);
+  $._FutureImpl__FutureImpl$wait([completer1.future, completer2.future]).then$1(new $.StreamExt_merge_closure1(controller));
   return new $._BroadcastStream(controller);
 },
 
@@ -5688,71 +5487,37 @@ StreamExt__getOnErrorHandler_closure: {"": "Closure;controller_0",
   }
 },
 
-StreamExt_delay_delayCall: {"": "Closure;duration_0",
-  call$2: function(f, x) {
-    var t1, t2, t3;
-    t1 = this.duration_0;
-    if (x == null) {
-      t2 = new $._ZoneTimer($.get$_Zone__current(), f, null);
-      t3 = t2._zone;
-      t3._openCallbacks = t3._openCallbacks + 1;
-      t2._timer = $._createTimer(t1, t2.get$_run());
-      t1 = t2;
-    } else {
-      t2 = new $._ZoneTimer($.get$_Zone__current(), new $.StreamExt_delay_delayCall_closure(f, x), null);
-      t3 = t2._zone;
-      t3._openCallbacks = t3._openCallbacks + 1;
-      t2._timer = $._createTimer(t1, t2.get$_run());
-      t1 = t2;
-    }
-    return t1;
-  },
-  call$1: function(f) {
-    return this.call$2(f, null);
-  }
-},
-
-StreamExt_delay_delayCall_closure: {"": "Closure;f_1,x_2",
-  call$0: function() {
-    return this.f_1.call$1(this.x_2);
-  }
-},
-
-StreamExt_delay_closure: {"": "Closure;controller_3,delayCall_4",
+StreamExt_merge_closure: {"": "Closure;controller_0",
   call$1: function(x) {
-    return this.delayCall_4.call$1(new $.StreamExt_delay__closure0(this.controller_3, x));
-  }
-},
-
-StreamExt_delay__closure0: {"": "Closure;controller_5,x_6",
-  call$0: function() {
     var t1, t2;
-    t1 = this.controller_5;
+    t1 = this.controller_0;
     t2 = t1._state;
     if ((t2 & 4) === 0) {
       if (t2 >= 4)
         $.throwExpression(t1._addEventError$0());
-      t1._sendData$1(this.x_6);
+      t1._sendData$1(x);
     }
     return;
   }
 },
 
-StreamExt_delay_closure0: {"": "Closure;onError_7,delayCall_8",
-  call$1: function(err) {
-    return this.delayCall_8.call$2(this.onError_7, err);
+StreamExt_merge_closure0: {"": "Closure;controller_1",
+  call$1: function(x) {
+    var t1, t2;
+    t1 = this.controller_1;
+    t2 = t1._state;
+    if ((t2 & 4) === 0) {
+      if (t2 >= 4)
+        $.throwExpression(t1._addEventError$0());
+      t1._sendData$1(x);
+    }
+    return;
   }
 },
 
-StreamExt_delay_closure1: {"": "Closure;controller_9,delayCall_10",
-  call$0: function() {
-    return this.delayCall_10.call$1(new $.StreamExt_delay__closure(this.controller_9));
-  }
-},
-
-StreamExt_delay__closure: {"": "Closure;controller_11",
-  call$0: function() {
-    var t1 = this.controller_11;
+StreamExt_merge_closure1: {"": "Closure;controller_2",
+  call$1: function(_) {
+    var t1 = this.controller_2;
     if ((t1._state & 4) === 0)
       t1.close$0(t1);
     return;
@@ -5841,17 +5606,6 @@ $.getInterceptor$ns = function(receiver) {
     return $.UnknownJavaScriptObject.prototype;
   return receiver;
 };
-$.getInterceptor$nx = function(receiver) {
-  if (typeof receiver == "number")
-    return $.JSNumber.prototype;
-  if (receiver == null)
-    return receiver;
-  if (typeof receiver != "object")
-    return receiver;
-  if (receiver instanceof $.Object)
-    return receiver;
-  return $.getNativeInterceptor(receiver);
-};
 $.getInterceptor$s = function(receiver) {
   if (typeof receiver == "string")
     return $.JSString.prototype;
@@ -5875,7 +5629,7 @@ C.C_CloseToken = new $.CloseToken();
 C.C_UnknownJavaScriptObject = new $.UnknownJavaScriptObject();
 C.C__DelayedDone = new $._DelayedDone();
 C.Duration_0 = new $.Duration(0);
-C.EventStreamProvider_mousemove = new $.EventStreamProvider("mousemove");
+C.EventStreamProvider_click = new $.EventStreamProvider("click");
 C.JSArray_methods = $.JSArray.prototype;
 C.JSInt_methods = $.JSInt.prototype;
 C.JSNull_methods = $.JSNull.prototype;
@@ -5953,6 +5707,9 @@ $.$sub$n = function(receiver, a0) {
 $.forEach$1$ax = function(receiver, a0) {
   return $.getInterceptor$ax(receiver).forEach$1(receiver, a0);
 };
+$.get$children$x = function(receiver) {
+  return $.getInterceptor$x(receiver).get$children(receiver);
+};
 $.get$hashCode$ = function(receiver) {
   return $.getInterceptor(receiver).get$hashCode(receiver);
 };
@@ -5962,26 +5719,8 @@ $.get$iterator$ax = function(receiver) {
 $.get$length$asx = function(receiver) {
   return $.getInterceptor$asx(receiver).get$length(receiver);
 };
-$.get$topLeft$x = function(receiver) {
-  return $.getInterceptor$x(receiver).get$topLeft(receiver);
-};
-$.getBoundingClientRect$0$x = function(receiver) {
-  return $.getInterceptor$x(receiver).getBoundingClientRect$0(receiver);
-};
 $.replaceWith$1$x = function(receiver, a0) {
   return $.getInterceptor$x(receiver).replaceWith$1(receiver, a0);
-};
-$.set$left$x = function(receiver, value) {
-  return $.getInterceptor$x(receiver).set$left(receiver, value);
-};
-$.set$position$x = function(receiver, value) {
-  return $.getInterceptor$x(receiver).set$position(receiver, value);
-};
-$.set$top$x = function(receiver, value) {
-  return $.getInterceptor$x(receiver).set$top(receiver, value);
-};
-$.toInt$0$nx = function(receiver) {
-  return $.getInterceptor$nx(receiver).toInt$0(receiver);
 };
 $.toString$0 = function(receiver) {
   return $.getInterceptor(receiver).toString$0(receiver);
@@ -6057,9 +5796,9 @@ Isolate.$lazy($, "_toStringList", "Maps__toStringList", "get$Maps__toStringList"
   return $.List_List(null);
 });
 // Native classes
-$.defineNativeMethods("DOMError|FileError|MediaError|MediaKeyError|Navigator|NavigatorUserMediaError|PositionError|SQLError|SVGAnimatedLength|SVGAnimatedLengthList|SVGAnimatedNumber|SVGAnimatedNumberList|SVGAnimatedString", $.Interceptor);
+$.defineNativeMethods("AudioProcessingEvent|AutocompleteErrorEvent|BeforeLoadEvent|CSSFontFaceLoadEvent|CloseEvent|CompositionEvent|CustomEvent|DOMError|DeviceMotionEvent|DeviceOrientationEvent|DragEvent|ErrorEvent|Event|FileError|FocusEvent|HashChangeEvent|IDBVersionChangeEvent|KeyboardEvent|MIDIConnectionEvent|MIDIMessageEvent|MediaError|MediaKeyError|MediaKeyEvent|MediaKeyMessageEvent|MediaKeyNeededEvent|MediaStreamEvent|MediaStreamTrackEvent|MessageEvent|MouseEvent|MouseScrollEvent|MouseWheelEvent|MutationEvent|Navigator|NavigatorUserMediaError|OfflineAudioCompletionEvent|OverflowEvent|PageTransitionEvent|PopStateEvent|PositionError|ProgressEvent|RTCDTMFToneChangeEvent|RTCDataChannelEvent|RTCIceCandidateEvent|ResourceProgressEvent|SQLError|SVGAnimatedNumberList|SVGZoomEvent|SecurityPolicyViolationEvent|SpeechInputEvent|SpeechRecognitionError|SpeechRecognitionEvent|SpeechSynthesisEvent|StorageEvent|TextEvent|TouchEvent|TrackEvent|TransitionEvent|UIEvent|WebGLContextEvent|WebKitAnimationEvent|WebKitTransitionEvent|WheelEvent|XMLHttpRequestProgressEvent", $.Interceptor);
 
-$.defineNativeMethods("HTMLAreaElement|HTMLAudioElement|HTMLBRElement|HTMLBaseElement|HTMLBodyElement|HTMLButtonElement|HTMLCanvasElement|HTMLContentElement|HTMLDListElement|HTMLDataListElement|HTMLDetailsElement|HTMLDialogElement|HTMLDivElement|HTMLEmbedElement|HTMLFieldSetElement|HTMLHRElement|HTMLHeadElement|HTMLHeadingElement|HTMLHtmlElement|HTMLIFrameElement|HTMLKeygenElement|HTMLLIElement|HTMLLabelElement|HTMLLegendElement|HTMLLinkElement|HTMLMapElement|HTMLMediaElement|HTMLMenuElement|HTMLMetaElement|HTMLMeterElement|HTMLModElement|HTMLOListElement|HTMLObjectElement|HTMLOptGroupElement|HTMLOptionElement|HTMLOutputElement|HTMLParagraphElement|HTMLParamElement|HTMLPreElement|HTMLProgressElement|HTMLQuoteElement|HTMLScriptElement|HTMLShadowElement|HTMLSourceElement|HTMLSpanElement|HTMLStyleElement|HTMLTableCaptionElement|HTMLTableCellElement|HTMLTableColElement|HTMLTableDataCellElement|HTMLTableElement|HTMLTableHeaderCellElement|HTMLTableRowElement|HTMLTableSectionElement|HTMLTemplateElement|HTMLTextAreaElement|HTMLTitleElement|HTMLTrackElement|HTMLUListElement|HTMLUnknownElement|HTMLVideoElement", $.HtmlElement);
+$.defineNativeMethods("HTMLAreaElement|HTMLAudioElement|HTMLBRElement|HTMLBaseElement|HTMLBodyElement|HTMLButtonElement|HTMLCanvasElement|HTMLContentElement|HTMLDListElement|HTMLDataListElement|HTMLDetailsElement|HTMLDialogElement|HTMLDivElement|HTMLEmbedElement|HTMLFieldSetElement|HTMLHRElement|HTMLHeadElement|HTMLHeadingElement|HTMLHtmlElement|HTMLIFrameElement|HTMLImageElement|HTMLKeygenElement|HTMLLIElement|HTMLLabelElement|HTMLLegendElement|HTMLLinkElement|HTMLMapElement|HTMLMediaElement|HTMLMenuElement|HTMLMetaElement|HTMLMeterElement|HTMLModElement|HTMLOListElement|HTMLObjectElement|HTMLOptGroupElement|HTMLOptionElement|HTMLOutputElement|HTMLParagraphElement|HTMLParamElement|HTMLPreElement|HTMLProgressElement|HTMLQuoteElement|HTMLScriptElement|HTMLShadowElement|HTMLSourceElement|HTMLSpanElement|HTMLStyleElement|HTMLTableCaptionElement|HTMLTableCellElement|HTMLTableColElement|HTMLTableDataCellElement|HTMLTableElement|HTMLTableHeaderCellElement|HTMLTableRowElement|HTMLTableSectionElement|HTMLTemplateElement|HTMLTextAreaElement|HTMLTitleElement|HTMLTrackElement|HTMLUListElement|HTMLUnknownElement|HTMLVideoElement", $.HtmlElement);
 
 $.defineNativeMethodsNonleaf("HTMLElement", $.HtmlElement);
 
@@ -6067,15 +5806,9 @@ $.defineNativeMethods("HTMLAnchorElement", $.AnchorElement);
 
 $.defineNativeMethods("CDATASection|CharacterData|Comment|Text", $.CharacterData);
 
-$.defineNativeMethods("CSS2Properties|CSSStyleDeclaration|MSStyleCSSProperties", $.CssStyleDeclaration);
-
 $.defineNativeMethods("DOMException", $.DomException);
 
 $.defineNativeMethodsNonleaf("Element", $.Element);
-
-$.defineNativeMethods("AudioProcessingEvent|AutocompleteErrorEvent|BeforeLoadEvent|CSSFontFaceLoadEvent|CloseEvent|CustomEvent|DeviceMotionEvent|DeviceOrientationEvent|ErrorEvent|HashChangeEvent|IDBVersionChangeEvent|MIDIConnectionEvent|MIDIMessageEvent|MediaKeyEvent|MediaKeyMessageEvent|MediaKeyNeededEvent|MediaStreamEvent|MediaStreamTrackEvent|MessageEvent|MutationEvent|OfflineAudioCompletionEvent|OverflowEvent|PageTransitionEvent|PopStateEvent|ProgressEvent|RTCDTMFToneChangeEvent|RTCDataChannelEvent|RTCIceCandidateEvent|ResourceProgressEvent|SecurityPolicyViolationEvent|SpeechInputEvent|SpeechRecognitionError|SpeechRecognitionEvent|SpeechSynthesisEvent|StorageEvent|TrackEvent|TransitionEvent|WebGLContextEvent|WebKitAnimationEvent|WebKitTransitionEvent|XMLHttpRequestProgressEvent", $.Event);
-
-$.defineNativeMethodsNonleaf("Event", $.Event);
 
 $.defineNativeMethods("MediaStream", $.EventTarget);
 
@@ -6085,11 +5818,7 @@ $.defineNativeMethods("HTMLFormElement", $.FormElement);
 
 $.defineNativeMethods("HTMLCollection|HTMLFormControlsCollection|HTMLOptionsCollection", $.HtmlCollection);
 
-$.defineNativeMethods("HTMLImageElement", $.ImageElement);
-
 $.defineNativeMethods("HTMLInputElement", $.InputElement);
-
-$.defineNativeMethods("DragEvent|MouseEvent|MouseScrollEvent|MouseWheelEvent|WheelEvent", $.MouseEvent);
 
 $.defineNativeMethods("Attr|Document|DocumentFragment|DocumentType|Entity|HTMLDocument|Notation|ProcessingInstruction|SVGDocument|ShadowRoot", $.Node);
 
@@ -6099,79 +5828,9 @@ $.defineNativeMethods("NodeList|RadioNodeList", $.NodeList);
 
 $.defineNativeMethods("HTMLSelectElement", $.SelectElement);
 
-$.defineNativeMethods("CompositionEvent|FocusEvent|KeyboardEvent|SVGZoomEvent|TextEvent|TouchEvent", $.UIEvent);
-
-$.defineNativeMethodsNonleaf("UIEvent", $.UIEvent);
-
 $.defineNativeMethods("DOMWindow|Window", $.Window);
 
-$.defineNativeMethods("ClientRect", $._ClientRect);
-
-$.defineNativeMethods("SVGFEBlendElement", $.FEBlendElement);
-
-$.defineNativeMethods("SVGFEColorMatrixElement", $.FEColorMatrixElement);
-
-$.defineNativeMethods("SVGFEComponentTransferElement", $.FEComponentTransferElement);
-
-$.defineNativeMethods("SVGFECompositeElement", $.FECompositeElement);
-
-$.defineNativeMethods("SVGFEConvolveMatrixElement", $.FEConvolveMatrixElement);
-
-$.defineNativeMethods("SVGFEDiffuseLightingElement", $.FEDiffuseLightingElement);
-
-$.defineNativeMethods("SVGFEDisplacementMapElement", $.FEDisplacementMapElement);
-
-$.defineNativeMethods("SVGFEFloodElement", $.FEFloodElement);
-
-$.defineNativeMethods("SVGFEGaussianBlurElement", $.FEGaussianBlurElement);
-
-$.defineNativeMethods("SVGFEImageElement", $.FEImageElement);
-
-$.defineNativeMethods("SVGFEMergeElement", $.FEMergeElement);
-
-$.defineNativeMethods("SVGFEMorphologyElement", $.FEMorphologyElement);
-
-$.defineNativeMethods("SVGFEOffsetElement", $.FEOffsetElement);
-
-$.defineNativeMethods("SVGFEPointLightElement", $.FEPointLightElement);
-
-$.defineNativeMethods("SVGFESpecularLightingElement", $.FESpecularLightingElement);
-
-$.defineNativeMethods("SVGFESpotLightElement", $.FESpotLightElement);
-
-$.defineNativeMethods("SVGFETileElement", $.FETileElement);
-
-$.defineNativeMethods("SVGFETurbulenceElement", $.FETurbulenceElement);
-
-$.defineNativeMethods("SVGFilterElement", $.FilterElement);
-
-$.defineNativeMethods("SVGForeignObjectElement", $.ForeignObjectElement);
-
-$.defineNativeMethods("SVGAElement|SVGCircleElement|SVGClipPathElement|SVGDefsElement|SVGEllipseElement|SVGGElement|SVGLineElement|SVGPathElement|SVGPolygonElement|SVGPolylineElement|SVGSwitchElement", $.GraphicsElement);
-
-$.defineNativeMethodsNonleaf("SVGGraphicsElement", $.GraphicsElement);
-
-$.defineNativeMethods("SVGImageElement", $.ImageElement0);
-
-$.defineNativeMethods("SVGMaskElement", $.MaskElement);
-
-$.defineNativeMethods("SVGPatternElement", $.PatternElement);
-
-$.defineNativeMethods("SVGRectElement", $.RectElement);
-
-$.defineNativeMethods("SVGAnimateElement|SVGAnimateMotionElement|SVGAnimateTransformElement|SVGAnimationElement|SVGComponentTransferFunctionElement|SVGDescElement|SVGFEDistantLightElement|SVGFEFuncAElement|SVGFEFuncBElement|SVGFEFuncGElement|SVGFEFuncRElement|SVGFEMergeNodeElement|SVGGradientElement|SVGLinearGradientElement|SVGMarkerElement|SVGMetadataElement|SVGRadialGradientElement|SVGScriptElement|SVGSetElement|SVGStopElement|SVGStyleElement|SVGSymbolElement|SVGTitleElement|SVGViewElement", $.SvgElement);
-
-$.defineNativeMethodsNonleaf("SVGElement", $.SvgElement);
-
-$.defineNativeMethods("SVGSVGElement", $.SvgSvgElement);
-
-$.defineNativeMethods("SVGTextPathElement", $.TextContentElement);
-
-$.defineNativeMethodsNonleaf("SVGTextContentElement", $.TextContentElement);
-
-$.defineNativeMethods("SVGAltGlyphElement|SVGTSpanElement|SVGTextElement|SVGTextPositioningElement", $.TextPositioningElement);
-
-$.defineNativeMethods("SVGUseElement", $.UseElement);
+$.defineNativeMethods("SVGAElement|SVGAltGlyphElement|SVGAnimateElement|SVGAnimateMotionElement|SVGAnimateTransformElement|SVGAnimationElement|SVGCircleElement|SVGClipPathElement|SVGComponentTransferFunctionElement|SVGDefsElement|SVGDescElement|SVGElement|SVGEllipseElement|SVGFEBlendElement|SVGFEColorMatrixElement|SVGFEComponentTransferElement|SVGFECompositeElement|SVGFEConvolveMatrixElement|SVGFEDiffuseLightingElement|SVGFEDisplacementMapElement|SVGFEDistantLightElement|SVGFEFloodElement|SVGFEFuncAElement|SVGFEFuncBElement|SVGFEFuncGElement|SVGFEFuncRElement|SVGFEGaussianBlurElement|SVGFEImageElement|SVGFEMergeElement|SVGFEMergeNodeElement|SVGFEMorphologyElement|SVGFEOffsetElement|SVGFEPointLightElement|SVGFESpecularLightingElement|SVGFESpotLightElement|SVGFETileElement|SVGFETurbulenceElement|SVGFilterElement|SVGForeignObjectElement|SVGGElement|SVGGradientElement|SVGGraphicsElement|SVGImageElement|SVGLineElement|SVGLinearGradientElement|SVGMarkerElement|SVGMaskElement|SVGMetadataElement|SVGPathElement|SVGPatternElement|SVGPolygonElement|SVGPolylineElement|SVGRadialGradientElement|SVGRectElement|SVGSVGElement|SVGScriptElement|SVGSetElement|SVGStopElement|SVGStyleElement|SVGSwitchElement|SVGSymbolElement|SVGTSpanElement|SVGTextContentElement|SVGTextElement|SVGTextPathElement|SVGTextPositioningElement|SVGTitleElement|SVGUseElement|SVGViewElement", $.SvgElement);
 
 $.defineNativeMethodsExtended("ArrayBufferView", $.TypedData, [$.TypedData_ListMixin, $.TypedData_ListMixin_FixedLengthListMixin]);
 
@@ -6416,5 +6075,5 @@ function init() {
 }
 })()
 
-//# sourceMappingURL=delay_example.dart.js.map
-//@ sourceMappingURL=delay_example.dart.js.map
+//# sourceMappingURL=merge_example.dart.js.map
+//@ sourceMappingURL=merge_example.dart.js.map
