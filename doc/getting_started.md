@@ -15,9 +15,27 @@ The merged stream will forward any events and errors received from the input str
     // the input streams
     var stream1   = new StreamController.broadcast().stream;
     var stream2   = new StreamController.broadcast().stream;
-    
+
     // the merged output stream
     var merged	  = StreamExt.merge(stream1, stream2);
+
+
+### combineLatest
+
+The `StreamExt.combineLastest` merges two streams into one stream by using the selector function whenever one of the streams produces an event.
+
+The merged stream will complete if:
+* both input streams have completed
+* [closeOnError] flag is set to true and an error is received
+
+**Dart code**
+
+    // the input streams
+    var stream1   = new StreamController.broadcast().stream;
+    var stream2   = new StreamController.broadcast().stream;
+
+    // the merged output stream
+    var merged	  = StreamExt.combineLatest(stream1, stream2, (a, b) => a + b);
 
 
 ### delay

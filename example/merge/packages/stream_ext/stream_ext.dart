@@ -44,6 +44,46 @@ class StreamExt {
     return controller.stream;
   }
 
+  /// Merges two streams into one stream by using the selector function whenever one of the streams produces an event.
+  /// The merged stream will complete if:
+  /// * both input streams have completed
+  /// * [closeOnError] flag is set to true and an error is received
+  static Stream combineLatest(Stream stream1, Stream stream2, dynamic selector(dynamic, dynamic), { bool closeOnError : false, bool sync : false }) {
+    var controller = new StreamController.broadcast(sync : sync);
+    var completer1 = new Completer();
+    var completer2 = new Completer();
+    var onError    = _getOnErrorHandler(controller, closeOnError);
+
+    // current latest items on each stream
+    var item1;
+    var item2;
+
+    void handleNewEvent() {
+      if (item1 != null && item2 != null) {
+        _tryAdd(controller, selector(item1, item2));
+      }
+    }
+
+    stream1.listen((x) {
+        item1 = x;
+        handleNewEvent();
+      },
+      onError : onError,
+      onDone  : completer1.complete);
+    stream2.listen((x) {
+        item2 = x;
+        handleNewEvent();
+      },
+      onError : onError,
+      onDone  : completer2.complete);
+
+    Future
+      .wait([ completer1.future, completer2.future ])
+      .then((_) => _tryClose(controller));
+
+    return controller.stream;
+  }
+
   /// Creates a new stream whose events are sourced from the input stream but delivered after the specified duration.
   /// The delayed stream will complete if:
   /// * the input stream has completed and the delayed complete message has been delivered
@@ -114,8 +154,8 @@ class StreamExt {
   /// The zipped stream will complete if:
   /// * either input stream has completed
   /// * [closeOnError] flag is set to true and an error is received
-  static Stream zip(Stream stream1, Stream stream2, dynamic zipper(dynamic item1, dynamic item2), { bool closeOnError : false, bool sync : false }) {
-    var controller = new StreamController.broadcast();
+  static Stream zip(Stream stream1, Stream stream2, dynamic zipper(dynamic, dynamic), { bool closeOnError : false, bool sync : false }) {
+    var controller = new StreamController.broadcast(sync : sync);
     var onError    = _getOnErrorHandler(controller, closeOnError);
 
     // lists to track the data that had been buffered for the two streams
@@ -145,4 +185,5 @@ class StreamExt {
 
     return controller.stream;
   }
+
 }
