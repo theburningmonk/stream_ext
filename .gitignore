@@ -2,9 +2,6 @@
 packages/
 *.project
 *.buildlog
-*.js_
-*.js.deps
-*.js.map
 pubspec.lock
 
 # files and directories dropped by other development environments
@@ -14,6 +11,3 @@ pubspec.lock
 *.iws         // IntelliJ
 .idea/        // IntelliJ
 .DS_Store     // Mac
-
-# generated JavaScript files
-*.dart.js
