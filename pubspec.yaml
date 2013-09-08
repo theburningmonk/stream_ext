@@ -3,7 +3,7 @@ version: 0.0.1
 author: Yan Cui <theburningmonk@gmail.com>
 description: Extension functions for Stream class
 homepage: https://github.com/theburningmonk/stream_ext
-dependencies:
+dev_dependencies:
   browser: any
   js: any
   unittest: any

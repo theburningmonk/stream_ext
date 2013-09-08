@@ -32,10 +32,10 @@ class StreamExt {
 
     stream1.listen((x) => _tryAdd(controller, x),
                    onError : onError,
-                   onDone  : () => completer1.complete());
+                   onDone  : completer1.complete);
     stream2.listen((x) => _tryAdd(controller, x),
                    onError : onError,
-                   onDone  : () => completer2.complete());
+                   onDone  : completer2.complete);
 
     Future
       .wait([ completer1.future, completer2.future ])
@@ -99,13 +99,49 @@ class StreamExt {
           });
         }
       },
-     onError : onError,
-     onDone  : () {
-       if (isThrottling && buffer != null) {
-         _tryAdd(controller, buffer);
-       }
-       _tryClose(controller);
-     });
+      onError : onError,
+      onDone  : () {
+        if (isThrottling && buffer != null) {
+          _tryAdd(controller, buffer);
+        }
+        _tryClose(controller);
+      });
+
+    return controller.stream;
+  }
+
+  /// Zips two streams into one by combining their elements in a pairwise fashion.
+  /// The zipped stream will complete if:
+  /// * either input stream has completed
+  /// * [closeOnError] flag is set to true and an error is received
+  static Stream zip(Stream stream1, Stream stream2, dynamic zipper(dynamic item1, dynamic item2), { bool closeOnError : false, bool sync : false }) {
+    var controller = new StreamController.broadcast();
+    var onError    = _getOnErrorHandler(controller, closeOnError);
+
+    // lists to track the data that had been buffered for the two streams
+    var buffer1 = new List();
+    var buffer2 = new List();
+
+    // handler for new event being added to the list on the left
+    void handleNewEvent(List left, List right, dynamic newValue) {
+      left.add(newValue);
+
+      if (right.isEmpty) {
+        return;
+      }
+
+      // get and remove the first available items from the two buffers, zip them and return them
+      var item1 = buffer1.removeAt(0);
+      var item2 = buffer2.removeAt(0);
+      _tryAdd(controller, zipper(item1, item2));
+    }
+
+    stream1.listen((x) => handleNewEvent(buffer1, buffer2, x),
+                   onError : onError,
+                   onDone  : () => _tryClose(controller));
+    stream2.listen((x) => handleNewEvent(buffer2, buffer1, x),
+                   onError : onError,
+                   onDone  : () => _tryClose(controller));
 
     return controller.stream;
   }
