@@ -9,12 +9,15 @@ The merged stream will forward any events and errors received from the input str
 * both input streams have completed
 * the `closeOnError` flag is set to true and an error is received from either input stream
 
+
     // the input streams
     var stream1   = new StreamController.broadcast().stream;
     var stream2   = new StreamController.broadcast().stream;
 
+
     // the merged output stream
     var merged	  = StreamExt.merge(stream1, stream2);
+
 
 ## delay
 
@@ -23,10 +26,12 @@ The delayed stream will complete if:
 * the input has completed and the delayed complete message has been delivered
 * the `closeOnError` flag is set to true and an error is received from the input stream
 
+
     var input   = new StreamController.broadcast().stream;
 
-	// each event from the input stream is delivered 1 second after it was originally received
+    // each event from the input stream is delivered 1 second after it was originally received
     var delayed	= StreamExt.delay(input, new Duration(seconds : 1));
+
 
 ## throttle
 
@@ -35,8 +40,10 @@ The throttled stream will complete if:
 * the input stream has completed and the any throttled message has been delivered
 * the `closeOnError` flag is set to true and an error is received from the input stream
 
+
     var input   = new StreamController.broadcast().stream;
     var delayed	= StreamExt.throttle(input, new Duration(seconds : 1));
+
 
 ## zip
 
@@ -44,6 +51,7 @@ The `StreamExt.zip` function zips two streams into one by combining their elemen
 The zipped stream will complete if:
 * either input stream has completed
 * [closeOnError] flag is set to true and an error is received
+
 
     var mouseMove = document.onMouseMove;
     var mouseDrags =
