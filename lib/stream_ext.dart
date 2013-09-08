@@ -48,7 +48,7 @@ class StreamExt {
   /// The merged stream will complete if:
   /// * both input streams have completed
   /// * [closeOnError] flag is set to true and an error is received
-  static Stream combineLatest(Stream stream1, Stream stream2, dynamic selector(dynamic, dynamic), { bool closeOnError : false, bool sync : false }) {
+  static Stream combineLatest(Stream stream1, Stream stream2, dynamic selector(dynamic item1, dynamic item2), { bool closeOnError : false, bool sync : false }) {
     var controller = new StreamController.broadcast(sync : sync);
     var completer1 = new Completer();
     var completer2 = new Completer();
@@ -154,7 +154,7 @@ class StreamExt {
   /// The zipped stream will complete if:
   /// * either input stream has completed
   /// * [closeOnError] flag is set to true and an error is received
-  static Stream zip(Stream stream1, Stream stream2, dynamic zipper(dynamic, dynamic), { bool closeOnError : false, bool sync : false }) {
+  static Stream zip(Stream stream1, Stream stream2, dynamic zipper(dynamic item1, dynamic item2), { bool closeOnError : false, bool sync : false }) {
     var controller = new StreamController.broadcast(sync : sync);
     var onError    = _getOnErrorHandler(controller, closeOnError);
 
@@ -185,5 +185,4 @@ class StreamExt {
 
     return controller.stream;
   }
-
 }
