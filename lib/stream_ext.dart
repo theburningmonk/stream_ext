@@ -112,40 +112,41 @@ class StreamExt {
 
     var isThrottling = false;
     var buffer;
-    Timer timer = new Timer(duration, () {});
-    input.listen((x) {
-        // if this is the first item then push it
-        if (!isThrottling) {
-          _tryAdd(controller, x);
-          isThrottling = true;
+    void handleNewEvent(x) {
+      // if this is the first item then push it
+      if (!isThrottling) {
+        _tryAdd(controller, x);
+        isThrottling = true;
 
-          new Timer(duration, () => isThrottling = false);
-        } else {
-          buffer = x;
-          isThrottling = true;
+        new Timer(duration, () => isThrottling = false);
+      } else {
+        buffer = x;
+        isThrottling = true;
 
-          new Timer(duration, () {
-            // when the timer callback is invoked after the timeout, check if there has been any
-            // new items by comparing the last item against our captured closure 'x'
-            // only push the event to the output stream if the captured event has not been
-            // superceded by a subsequent event
-            if (buffer == x) {
-              _tryAdd(controller, x);
+        new Timer(duration, () {
+          // when the timer callback is invoked after the timeout, check if there has been any
+          // new items by comparing the last item against our captured closure 'x'
+          // only push the event to the output stream if the captured event has not been
+          // superceded by a subsequent event
+          if (buffer == x) {
+            _tryAdd(controller, x);
 
-              // reset
-              isThrottling = false;
-              buffer = null;
-            }
-          });
-        }
-      },
-      onError : onError,
-      onDone  : () {
-        if (isThrottling && buffer != null) {
-          _tryAdd(controller, buffer);
-        }
-        _tryClose(controller);
-      });
+            // reset
+            isThrottling = false;
+            buffer = null;
+          }
+        });
+      }
+    }
+
+    input.listen(handleNewEvent,
+                 onError : onError,
+                 onDone  : () {
+                    if (isThrottling && buffer != null) {
+                      _tryAdd(controller, buffer);
+                    }
+                    _tryClose(controller);
+                  });
 
     return controller.stream;
   }
@@ -195,23 +196,54 @@ class StreamExt {
     var controller = new StreamController.broadcast(sync : sync);
     var onError    = _getOnErrorHandler(controller, closeOnError);
 
-    var elements   = new List();
+    var buffer   = new List();
+    void pushBuffer() {
+      if (buffer.length == count) {
+        _tryAdd(controller, buffer.toList()); // add a clone instead of the buffer list
+        buffer.clear();
+      }
+    }
 
     void handleNewEvent(x) {
-      elements.add(x);
-      if (elements.length == count) {
-        _tryAdd(controller, elements.toList()); // add a clone instead of the buffer list
-        elements.clear();
-      }
+      buffer.add(x);
+      pushBuffer();
     }
 
     input.listen(handleNewEvent,
                  onError : onError,
                  onDone  : () {
-                   if (elements.length > 0) {
-                     _tryAdd(controller, elements.toList()); // add a clone instead of the buffer list
+                   if (buffer.length > 0) {
+                     _tryAdd(controller, buffer.toList()); // add a clone instead of the buffer list
                    }
+                   _tryClose(controller);
+                 });
 
+    return controller.stream;
+  }
+
+  /// Creates a new stream which buffers elements from the input stream produced within the specified duration. Each element
+  /// produced by the output stream is a list.
+  /// The output stream will complete if:
+  /// * the input stream has completed and any buffered elements have been pushed
+  /// * [closeOnError] flag is set to true and an error is received
+  static Stream buffer(Stream input, Duration duration, { bool closeOnError : false, bool sync : false }) {
+    var controller = new StreamController.broadcast(sync : sync);
+    var onError    = _getOnErrorHandler(controller, closeOnError);
+
+    var buffer = new List();
+    void pushBuffer() {
+      if (buffer.length > 0) {
+        _tryAdd(controller, buffer.toList()); // add a clone instead of the buffer list
+        buffer.clear();
+      }
+    }
+
+    new Timer.periodic(duration, (_) => pushBuffer());
+
+    input.listen(buffer.add,
+                 onError  : onError,
+                 onDone   : () {
+                   pushBuffer();
                    _tryClose(controller);
                  });
 

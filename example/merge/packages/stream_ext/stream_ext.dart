@@ -48,7 +48,7 @@ class StreamExt {
   /// The merged stream will complete if:
   /// * both input streams have completed
   /// * [closeOnError] flag is set to true and an error is received
-  static Stream combineLatest(Stream stream1, Stream stream2, dynamic selector(dynamic, dynamic), { bool closeOnError : false, bool sync : false }) {
+  static Stream combineLatest(Stream stream1, Stream stream2, dynamic selector(dynamic item1, dynamic item2), { bool closeOnError : false, bool sync : false }) {
     var controller = new StreamController.broadcast(sync : sync);
     var completer1 = new Completer();
     var completer2 = new Completer();
@@ -112,40 +112,41 @@ class StreamExt {
 
     var isThrottling = false;
     var buffer;
-    Timer timer = new Timer(duration, () {});
-    input.listen((x) {
-        // if this is the first item then push it
-        if (!isThrottling) {
-          _tryAdd(controller, x);
-          isThrottling = true;
+    void handleNewEvent(x) {
+      // if this is the first item then push it
+      if (!isThrottling) {
+        _tryAdd(controller, x);
+        isThrottling = true;
 
-          new Timer(duration, () => isThrottling = false);
-        } else {
-          buffer = x;
-          isThrottling = true;
+        new Timer(duration, () => isThrottling = false);
+      } else {
+        buffer = x;
+        isThrottling = true;
 
-          new Timer(duration, () {
-            // when the timer callback is invoked after the timeout, check if there has been any
-            // new items by comparing the last item against our captured closure 'x'
-            // only push the event to the output stream if the captured event has not been
-            // superceded by a subsequent event
-            if (buffer == x) {
-              _tryAdd(controller, x);
+        new Timer(duration, () {
+          // when the timer callback is invoked after the timeout, check if there has been any
+          // new items by comparing the last item against our captured closure 'x'
+          // only push the event to the output stream if the captured event has not been
+          // superceded by a subsequent event
+          if (buffer == x) {
+            _tryAdd(controller, x);
 
-              // reset
-              isThrottling = false;
-              buffer = null;
-            }
-          });
-        }
-      },
-      onError : onError,
-      onDone  : () {
-        if (isThrottling && buffer != null) {
-          _tryAdd(controller, buffer);
-        }
-        _tryClose(controller);
-      });
+            // reset
+            isThrottling = false;
+            buffer = null;
+          }
+        });
+      }
+    }
+
+    input.listen(handleNewEvent,
+                 onError : onError,
+                 onDone  : () {
+                    if (isThrottling && buffer != null) {
+                      _tryAdd(controller, buffer);
+                    }
+                    _tryClose(controller);
+                  });
 
     return controller.stream;
   }
@@ -154,7 +155,7 @@ class StreamExt {
   /// The zipped stream will complete if:
   /// * either input stream has completed
   /// * [closeOnError] flag is set to true and an error is received
-  static Stream zip(Stream stream1, Stream stream2, dynamic zipper(dynamic, dynamic), { bool closeOnError : false, bool sync : false }) {
+  static Stream zip(Stream stream1, Stream stream2, dynamic zipper(dynamic item1, dynamic item2), { bool closeOnError : false, bool sync : false }) {
     var controller = new StreamController.broadcast(sync : sync);
     var onError    = _getOnErrorHandler(controller, closeOnError);
 
@@ -186,4 +187,66 @@ class StreamExt {
     return controller.stream;
   }
 
+  /// Projects each element from the input stream into consecutive non-overlapping windows. Each element produced by the output
+  /// stream will contains a list of elements up to the specified count.
+  /// The output stream will complete if:
+  /// * the input stream has completed and any buffered elements have been pushed
+  /// * [closeOnError] flag is set to true and an error is received
+  static Stream window(Stream input, int count, { bool closeOnError : false, bool sync : false }) {
+    var controller = new StreamController.broadcast(sync : sync);
+    var onError    = _getOnErrorHandler(controller, closeOnError);
+
+    var buffer   = new List();
+    void pushBuffer() {
+      if (buffer.length == count) {
+        _tryAdd(controller, buffer.toList()); // add a clone instead of the buffer list
+        buffer.clear();
+      }
+    }
+
+    void handleNewEvent(x) {
+      buffer.add(x);
+      pushBuffer();
+    }
+
+    input.listen(handleNewEvent,
+                 onError : onError,
+                 onDone  : () {
+                   if (buffer.length > 0) {
+                     _tryAdd(controller, buffer.toList()); // add a clone instead of the buffer list
+                   }
+                   _tryClose(controller);
+                 });
+
+    return controller.stream;
+  }
+
+  /// Creates a new stream which buffers elements from the input stream produced within the specified duration. Each element
+  /// produced by the output stream is a list.
+  /// The output stream will complete if:
+  /// * the input stream has completed and any buffered elements have been pushed
+  /// * [closeOnError] flag is set to true and an error is received
+  static Stream buffer(Stream input, Duration duration, { bool closeOnError : false, bool sync : false }) {
+    var controller = new StreamController.broadcast(sync : sync);
+    var onError    = _getOnErrorHandler(controller, closeOnError);
+
+    var buffer = new List();
+    void pushBuffer() {
+      if (buffer.length > 0) {
+        _tryAdd(controller, buffer.toList()); // add a clone instead of the buffer list
+        buffer.clear();
+      }
+    }
+
+    new Timer.periodic(duration, (_) => pushBuffer());
+
+    input.listen(buffer.add,
+                 onError  : onError,
+                 onDone   : () {
+                   pushBuffer();
+                   _tryClose(controller);
+                 });
+
+    return controller.stream;
+  }
 }
