@@ -29,16 +29,13 @@ class BufferTests {
       new Timer(new Duration(milliseconds : 2), () {
         controller.add(3);
         controller.add(4);
-        controller.close();
-      });
+        controller.close().then((_) {
+          expect(list.length, equals(2),   reason : "buffered stream should have two events");
+          expect(list, equals([ [ 0, 1, 2 ], [ 3, 4 ] ]), reason : "buffered stream should contain lists [ 0, 1, 2 ] and [ 3, 4 ]");
 
-      new Timer(new Duration(milliseconds : 5), () {
-        expect(list.length, equals(2),   reason : "buffered stream should have two events");
-        expect(list, equals([ [ 0, 1, 2 ], [ 3, 4 ] ]),
-               reason : "buffered stream should contain lists [ 0, 1, 2 ] and [ 3, 4 ]");
-
-        expect(hasErr, equals(false), reason : "buffered stream should not have received error");
-        expect(isDone, equals(true),  reason : "buffered stream should be completed");
+          expect(hasErr, equals(false), reason : "buffered stream should not have received error");
+          expect(isDone, equals(true),  reason : "buffered stream should be completed");
+        });
       });
     });
   }
@@ -64,16 +61,13 @@ class BufferTests {
       new Timer(new Duration(milliseconds : 2), () {
         controller.add(3);
         controller.add(4);
-        controller.close();
-      });
+        controller.close().then((_) {
+          expect(list.length, equals(2), reason : "buffered stream should have two events");
+          expect(list, equals([ [ 0, 1, 2 ], [ 3, 4 ] ]), reason : "buffered stream should contain lists [ 0, 1, 2 ], [ 3, 4 ]");
 
-      new Timer(new Duration(milliseconds : 5), () {
-        expect(list.length, equals(2),   reason : "buffered stream should have two events");
-        expect(list, equals([ [ 0, 1, 2 ], [ 3, 4 ] ]),
-               reason : "buffered stream should contain lists [ 0, 1, 2 ], [ 3, 4 ]");
-
-        expect(hasErr, equals(true), reason : "buffered stream should have received error");
-        expect(isDone, equals(true), reason : "buffered stream should be completed");
+          expect(hasErr, equals(true), reason : "buffered stream should have received error");
+          expect(isDone, equals(true), reason : "buffered stream should be completed");
+        });
       });
     });
   }
@@ -99,16 +93,13 @@ class BufferTests {
         controller.add(3);
         controller.add(4);
         controller.addError("failed");
-        controller.close();
-      });
+        controller.close().then((_) {
+          expect(list.length, equals(1), reason : "buffered stream should have only one event before the error");
+          expect(list, equals([ [ 0, 1, 2 ] ]), reason : "buffered stream should contain list [ 0, 1, 2 ]");
 
-      new Timer(new Duration(milliseconds : 5), () {
-        expect(list.length, equals(1),   reason : "buffered stream should have only one event before the error");
-        expect(list, equals([ [ 0, 1, 2 ] ]),
-               reason : "buffered stream should contain list [ 0, 1, 2 ]");
-
-        expect(hasErr, equals(true), reason : "buffered stream should have received error");
-        expect(isDone, equals(true), reason : "buffered stream should be completed");
+          expect(hasErr, equals(true), reason : "buffered stream should have received error");
+          expect(isDone, equals(true), reason : "buffered stream should be completed");
+        });
       });
     });
   }

@@ -281,4 +281,31 @@ class StreamExt {
 
     return controller.stream;
   }
+
+  /**
+   * Creates a new stream by applying an accumulator function over the elements produced by the input stream and
+   * returns each intermediate result with the specified seed and accumulator.
+   *
+   * The output stream will complete if:
+   *
+   * * the input stream has completed
+   * * [closeOnError] flag is set to true and an error is received
+   */
+  static Stream scan(Stream input, dynamic seed, dynamic accumulator(dynamic acc, dynamic element), { bool closeOnError : false, bool sync : false }) {
+    var controller = new StreamController.broadcast(sync : sync);
+    var onError    = _getOnErrorHandler(controller, closeOnError);
+
+    var acc = seed;
+
+    void handleNewEvent(x) {
+      acc = accumulator(acc, x);
+      _tryAdd(controller, acc);
+    }
+
+    input.listen(handleNewEvent,
+                 onError : onError,
+                 onDone  : () => _tryClose(controller));
+
+    return controller.stream;
+  }
 }

@@ -30,9 +30,7 @@ class WindowTests {
       controller.add(5);
       controller.add(6);
 
-      controller.close();
-
-      new Timer(new Duration(milliseconds : 5), () {
+      controller.close().then((_) {
         expect(list.length, equals(3),   reason : "windowed stream should have three events");
         expect(list, equals([ [ 0, 1, 2 ], [ 3, 4, 5 ], [ 6 ] ]),
                reason : "windowed stream should contain lists [ 0, 1, 2 ], [ 3, 4, 5 ] and [ 6 ]");
@@ -65,9 +63,7 @@ class WindowTests {
       controller.add(5);
       controller.add(6);
 
-      controller.close();
-
-      new Timer(new Duration(milliseconds : 5), () {
+      controller.close().then((_) {
         expect(list.length, equals(3),   reason : "windowed stream should have three events");
         expect(list, equals([ [ 0, 1, 2 ], [ 3, 4, 5 ], [ 6 ] ]),
                reason : "windowed stream should contain lists [ 0, 1, 2 ], [ 3, 4, 5 ] and [ 6 ]");
@@ -98,9 +94,7 @@ class WindowTests {
       controller.addError("failed");
       controller.add(4);
 
-      controller.close();
-
-      new Timer(new Duration(milliseconds : 5), () {
+      controller.close().then((_) {
         expect(list.length, equals(1),   reason : "windowed stream should have only one event before the error");
         expect(list, equals([ [ 0, 1, 2 ] ]),
                reason : "windowed stream should contain list [ 0, 1, 2 ]");
