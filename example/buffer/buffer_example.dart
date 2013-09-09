@@ -1,4 +1,4 @@
-library window_example;
+library buffer_example;
 
 import 'dart:html';
 import 'dart:async';
