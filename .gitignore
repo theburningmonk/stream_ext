@@ -16,6 +16,3 @@ packages/
 
 # generated JavaScript files
 *.dart.js
-
-# copy all file contents in the example folder
-!example/*
