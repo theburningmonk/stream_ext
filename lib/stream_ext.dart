@@ -308,4 +308,16 @@ class StreamExt {
 
     return controller.stream;
   }
+
+  /**
+   * A specialization of the more general [scan] function, this
+   *
+   */
+  static Stream sum(Stream input, { num map (dynamic elem), bool closeOnError : false, bool sync : false }) {
+    if (map == null) {
+      map = (elem) => elem;
+    }
+
+    return scan(input, 0, (acc, elem) => acc + map(elem), closeOnError : closeOnError, sync : sync);
+  }
 }
