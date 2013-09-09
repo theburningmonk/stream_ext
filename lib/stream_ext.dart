@@ -20,10 +20,14 @@ class StreamExt {
     if (!controller.isClosed) controller.add(event);
   }
 
-  /// Merges two stream into one, the merged stream will forward any events and errors received from the input
-  /// streams. The merged stream will complete if:
-  /// * both input streams have completed
-  /// * [closeOnError] flag is set to true and an error is received
+  /**
+   * Merges two stream into one, the merged stream will forward any elements and errors received from the input streams.
+   *
+   * The merged stream will complete if:
+   *
+   * * both input streams have completed
+   * * [closeOnError] flag is set to true and an error is received
+   */
   static Stream merge(Stream stream1, Stream stream2, { bool closeOnError : false, bool sync : false }) {
     var controller = new StreamController.broadcast(sync : sync);
     var completer1 = new Completer();
@@ -44,10 +48,14 @@ class StreamExt {
     return controller.stream;
   }
 
-  /// Merges two streams into one stream by using the selector function whenever one of the streams produces an event.
-  /// The merged stream will complete if:
-  /// * both input streams have completed
-  /// * [closeOnError] flag is set to true and an error is received
+  /**
+   * Merges two streams into one by using the selector function to generate new elements whenever one of the input streams produces a new element.
+   *
+   * The merged stream will complete if:
+   *
+   * * both input streams have completed
+   * * [closeOnError] flag is set to true and an error is received
+   */
   static Stream combineLatest(Stream stream1, Stream stream2, dynamic selector(dynamic item1, dynamic item2), { bool closeOnError : false, bool sync : false }) {
     var controller = new StreamController.broadcast(sync : sync);
     var completer1 = new Completer();
@@ -84,10 +92,14 @@ class StreamExt {
     return controller.stream;
   }
 
-  /// Creates a new stream whose events are sourced from the input stream but delivered after the specified duration.
-  /// The delayed stream will complete if:
-  /// * the input stream has completed and the delayed complete message has been delivered
-  /// * [closeOnError] flag is set to true and an error is received
+  /**
+   * Creates a new stream whose elements are sourced from the input stream but each delivered after the specified duration.
+   *
+   * The delayed stream will complete if:
+   *
+   * * the input stream has completed and the delayed complete message has been delivered
+   * * [closeOnError] flag is set to true and an error is received
+   */
   static Stream delay(Stream input, Duration duration, { bool closeOnError : false, bool sync : false }) {
     var controller = new StreamController.broadcast(sync : sync);
     var onError    = _getOnErrorHandler(controller, closeOnError);
@@ -101,11 +113,14 @@ class StreamExt {
     return controller.stream;
   }
 
-  /// Creates a new stream who stops the flow of events produced by the input stream until no new event has been
-  /// produced by the input stream after the specified duration.
-  /// The throttled stream will complete if:
-  /// * the input stream has completed and the any throttled message has been delivered
-  /// * [closeOnError] flag is set to true and an error is received
+  /**
+   * Creates a new stream who stops the flow of elements produced by the input stream until no new element has been produced by the input stream after the specified duration.
+   *
+   * The throttled stream will complete if:
+   *
+   * * the input stream has completed and the any throttled message has been delivered
+   * * [closeOnError] flag is set to true and an error is received
+   */
   static Stream throttle(Stream input, Duration duration, { bool closeOnError : false, bool sync : false }) {
     var controller = new StreamController.broadcast(sync : sync);
     var onError    = _getOnErrorHandler(controller, closeOnError);
@@ -151,10 +166,14 @@ class StreamExt {
     return controller.stream;
   }
 
-  /// Zips two streams into one by combining their elements in a pairwise fashion.
-  /// The zipped stream will complete if:
-  /// * either input stream has completed
-  /// * [closeOnError] flag is set to true and an error is received
+  /**
+   * Zips two streams into one by combining their elements in a pairwise fashion.
+   *
+   * The zipped stream will complete if:
+   *
+   * * either input stream has completed
+   * * [closeOnError] flag is set to true and an error is received
+   */
   static Stream zip(Stream stream1, Stream stream2, dynamic zipper(dynamic item1, dynamic item2), { bool closeOnError : false, bool sync : false }) {
     var controller = new StreamController.broadcast(sync : sync);
     var onError    = _getOnErrorHandler(controller, closeOnError);
@@ -187,11 +206,16 @@ class StreamExt {
     return controller.stream;
   }
 
-  /// Projects each element from the input stream into consecutive non-overlapping windows. Each element produced by the output
-  /// stream will contains a list of elements up to the specified count.
-  /// The output stream will complete if:
-  /// * the input stream has completed and any buffered elements have been pushed
-  /// * [closeOnError] flag is set to true and an error is received
+  /**
+   * Projects each element from the input stream into consecutive non-overlapping windows.
+   *
+   * Each element produced by the output stream will contains a list of elements up to the specified count.
+   *
+   * The output stream will complete if:
+   *
+   * * the input stream has completed and any buffered elements have been pushed
+   * * [closeOnError] flag is set to true and an error is received
+   */
   static Stream window(Stream input, int count, { bool closeOnError : false, bool sync : false }) {
     var controller = new StreamController.broadcast(sync : sync);
     var onError    = _getOnErrorHandler(controller, closeOnError);
@@ -221,11 +245,16 @@ class StreamExt {
     return controller.stream;
   }
 
-  /// Creates a new stream which buffers elements from the input stream produced within the specified duration. Each element
-  /// produced by the output stream is a list.
-  /// The output stream will complete if:
-  /// * the input stream has completed and any buffered elements have been pushed
-  /// * [closeOnError] flag is set to true and an error is received
+  /**
+   * Creates a new stream which buffers elements from the input stream produced within the specified duration.
+   *
+   * Each element produced by the output stream is a list.
+   *
+   * The output stream will complete if:
+   *
+   * * the input stream has completed and any buffered elements have been pushed
+   * * [closeOnError] flag is set to true and an error is received
+   */
   static Stream buffer(Stream input, Duration duration, { bool closeOnError : false, bool sync : false }) {
     var controller = new StreamController.broadcast(sync : sync);
     var onError    = _getOnErrorHandler(controller, closeOnError);
