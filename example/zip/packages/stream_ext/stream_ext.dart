@@ -238,13 +238,16 @@ class StreamExt {
       }
     }
 
-    new Timer.periodic(duration, (_) => pushBuffer());
+    var timer = new Timer.periodic(duration, (_) => pushBuffer());
 
     input.listen(buffer.add,
                  onError  : onError,
                  onDone   : () {
                    pushBuffer();
                    _tryClose(controller);
+                   if (timer.isActive) {
+                     timer.cancel();
+                   }
                  });
 
     return controller.stream;
