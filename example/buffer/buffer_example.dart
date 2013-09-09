@@ -14,12 +14,12 @@ void main() {
   var contrl    = new StreamController.broadcast();
   var input     = contrl.stream;
 
-  var windows   = StreamExt.window(input, 3);
+  var buffers   = StreamExt.buffer(input, new Duration(seconds : 3));
 
   log(prefix, value) => output.children.add(new DivElement()..text = "$prefix - $value");
 
   input.listen((x) => log("input", x), onError : (err) => log("input", err), onDone : () => log("input", "done"));
-  windows.listen((x) => log("window", x), onError : (err) => log("window", err), onDone : () => log("window", "done"));
+  buffers.listen((x) => log("window", x), onError : (err) => log("window", err), onDone : () => log("window", "done"));
 
   var idx = 0;
   btn1.onClick.listen((_) => contrl.add(idx++));
