@@ -117,6 +117,21 @@ The output stream will complete if:
     var buffered = StreamExt.buffer(input, new Duration(seconds : 1));
 
 
+### scan
+
+The `StreamExt.scan` function creates a new stream by applying an accumulator function over the elements produced by the input stream and
+returns each intermediate result with the specified seed and accumulator.
+
+The output stream will complete if:
+* the input stream has completed
+* [closeOnError] flag is set to true and an error is received
+
+**Dart code**
+
+    var input 	= new StreamController.broadcast().stream;
+    var sums 	= StreamExt.scan(input, 0, (acc, elem) => acc + elem);
+
+
 ## Examples
 
 Please take a look at the **example** directory for more complete and meaningful usages of each of the extension functions.
