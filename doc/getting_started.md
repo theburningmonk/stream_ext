@@ -102,6 +102,21 @@ The output stream will complete if:
     var windowed = StreamExt.window(input, 3);
 
 
+### buffer
+
+The `StreamExt.buffer` function creates a new stream which buffers elements from the input stream produced within the sepcified duration.
+Each element produced by the output stream is a list.
+
+The output stream will complete if:
+* the input stream has completed and any buffered elements have been upshed
+* [closeOnError] flag is set to true and an error is received
+
+**Dart code**
+
+    var input 	 = new StreamController.broadcast().stream;
+    var buffered = StreamExt.buffer(input, new Duration(seconds : 1));
+
+
 ## Examples
 
 Please take a look at the **example** directory for more complete and meaningful usages of each of the extension functions.

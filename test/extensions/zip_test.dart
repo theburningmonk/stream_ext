@@ -86,7 +86,7 @@ class ZipTests {
   }
 
   void _zipCloseOnError() {
-    test("not close on error", () {
+    test("close on error", () {
       var controller1 = new StreamController.broadcast(sync : true);
       var controller2 = new StreamController.broadcast(sync : true);
       var stream1 = controller1.stream;
