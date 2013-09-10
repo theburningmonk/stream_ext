@@ -6,6 +6,7 @@ class SumTests {
       _sumWithInts();
       _sumWithDoubles();
       _sumWithMixOfIntsAndDoubles();
+      _sumWithUserError();
       _sumWithMapper();
     });
   }
@@ -89,6 +90,39 @@ class SumTests {
                reason : "output stream should contain values 1, 3.5, 6.5 and 11");
 
         expect(hasErr, equals(false), reason : "output stream should not have received error");
+        expect(isDone, equals(true), reason : "output stream should be completed");
+      });
+    });
+  }
+
+  void _sumWithUserError() {
+    test("with user error", () {
+      var controller = new StreamController.broadcast(sync : true);
+      var input      = controller.stream;
+
+      var list    = new List();
+      var hasErr  = false;
+      var error;
+      var isDone  = false;
+      StreamExt.sum(input, sync : true)
+        ..listen(list.add,
+                 onError : (err) {
+                   hasErr = true;
+                   error  = err;
+                 },
+                 onDone  : ()  => isDone = true);
+
+      controller.add(1);
+      controller.add(2.5);
+      controller.add("3"); // this should cause error
+      controller.add(4.5);
+      controller.close().then((_) {
+        expect(list.length, equals(3), reason : "output stream should have 3 events");
+        expect(list, equals([ 1, 3.5, 8 ]),
+               reason : "output stream should contain values 1, 3.5 and 8");
+
+        expect(hasErr, equals(true), reason : "output stream should have received error");
+        expect(error is TypeError, equals(true), reason : "output stream should have received TypeError");
         expect(isDone, equals(true), reason : "output stream should be completed");
       });
     });

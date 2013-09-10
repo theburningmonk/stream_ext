@@ -8,10 +8,16 @@ class StreamExt {
   static _getOnErrorHandler(StreamController controller, closeOnError) {
       return closeOnError
               ? (err) {
-                controller.addError(err);
-                controller.close();
+                if (!controller.isClosed) {
+                  controller.addError(err);
+                  controller.close();
+                }
               }
-              : controller.addError;
+              : (err) {
+                if (!controller.isClosed) {
+                  controller.addError(err);
+                }
+              };
   }
 
   static _tryClose(StreamController controller) {
@@ -201,10 +207,16 @@ class StreamExt {
         return;
       }
 
-      // get and remove the first available items from the two buffers, zip them and return them
-      var item1 = buffer1.removeAt(0);
-      var item2 = buffer2.removeAt(0);
-      _tryRun(() =>_tryAdd(controller, zipper(item1, item2)), onError);
+      var item1 = buffer1[0];
+      var item2 = buffer2[0];
+
+      _tryRun(() {
+        _tryAdd(controller, zipper(item1, item2));
+
+        // only remove the items from the buffer after the zipper function succeeds
+        buffer1.removeAt(0);
+        buffer2.removeAt(0);
+      }, onError);
     }
 
     stream1.listen((x) => handleNewEvent(buffer1, buffer2, x),
