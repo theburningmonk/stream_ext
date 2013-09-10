@@ -22,6 +22,15 @@ class StreamExt {
     if (!controller.isClosed) controller.add(event);
   }
 
+  static _tryRun(void delegate(), void onError(err)) {
+    try {
+      delegate();
+    }
+    catch (ex) {
+      onError(ex);
+    }
+  }
+
   /**
    * Merges two stream into one, the merged stream will forward any elements and errors received from the input streams.
    *
@@ -70,7 +79,7 @@ class StreamExt {
 
     void handleNewEvent() {
       if (item1 != null && item2 != null) {
-        _tryAdd(controller, selector(item1, item2));
+        _tryRun(() => _tryAdd(controller, selector(item1, item2)), onError);
       }
     }
 
@@ -195,7 +204,7 @@ class StreamExt {
       // get and remove the first available items from the two buffers, zip them and return them
       var item1 = buffer1.removeAt(0);
       var item2 = buffer2.removeAt(0);
-      _tryAdd(controller, zipper(item1, item2));
+      _tryRun(() =>_tryAdd(controller, zipper(item1, item2)), onError);
     }
 
     stream1.listen((x) => handleNewEvent(buffer1, buffer2, x),
@@ -300,8 +309,10 @@ class StreamExt {
     var acc = seed;
 
     void handleNewEvent(x) {
-      acc = accumulator(acc, x);
-      _tryAdd(controller, acc);
+      _tryRun(() {
+        acc = accumulator(acc, x);
+        _tryAdd(controller, acc);
+      }, onError);
     }
 
     input.listen(handleNewEvent,
