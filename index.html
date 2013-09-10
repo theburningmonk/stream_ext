@@ -1,0 +1,211 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <title>Stream ext by theburningmonk</title>
+
+    <link rel="stylesheet" href="stylesheets/styles.css">
+    <link rel="stylesheet" href="stylesheets/pygment_trac.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+    <!--[if lt IE 9]>
+    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+  </head>
+  <body>
+    <div class="wrapper">
+      <header>
+        <h1>Stream ext</h1>
+        <p>Extension and helper functions for working with Stream in Dart</p>
+
+        <p class="view"><a href="https://github.com/theburningmonk/stream_ext">View the Project on GitHub <small>theburningmonk/stream_ext</small></a></p>
+
+
+        <ul>
+          <li><a href="https://github.com/theburningmonk/stream_ext/zipball/master">Download <strong>ZIP File</strong></a></li>
+          <li><a href="https://github.com/theburningmonk/stream_ext/tarball/master">Download <strong>TAR Ball</strong></a></li>
+          <li><a href="https://github.com/theburningmonk/stream_ext">View On <strong>GitHub</strong></a></li>
+        </ul>
+      </header>
+      <section>
+        <h1>
+<a name="getting-started-with-stream_ext" class="anchor" href="#getting-started-with-stream_ext"><span class="octicon octicon-link"></span></a>Getting started with stream_ext</h1>
+
+<p>Learn about the extension functions for working with <code>Stream</code> type with <code>stream_ext</code>.</p>
+
+<h3>
+<a name="merge" class="anchor" href="#merge"><span class="octicon octicon-link"></span></a>merge</h3>
+
+<p>The <code>StreamExt.merge</code> function merges two stream into a single unitifed output stream.</p>
+
+<p>The merged stream will forward any events and errors received from the input streams and will complete if:</p>
+
+<ul>
+<li>both input streams have completed</li>
+<li>the <code>closeOnError</code> flag is set to true and an error is received from either input stream</li>
+</ul><p><strong>Dart code</strong></p>
+
+<pre><code>// the input streams
+var stream1   = new StreamController.broadcast().stream;
+var stream2   = new StreamController.broadcast().stream;
+
+// the merged output stream
+var merged    = StreamExt.merge(stream1, stream2);
+</code></pre>
+
+<h3>
+<a name="combinelatest" class="anchor" href="#combinelatest"><span class="octicon octicon-link"></span></a>combineLatest</h3>
+
+<p>The <code>StreamExt.combineLastest</code> merges two streams into one stream by using the selector function whenever one of the streams produces an event.</p>
+
+<p>The merged stream will complete if:</p>
+
+<ul>
+<li>both input streams have completed</li>
+<li>[closeOnError] flag is set to true and an error is received</li>
+</ul><p><strong>Dart code</strong></p>
+
+<pre><code>// the input streams
+var stream1   = new StreamController.broadcast().stream;
+var stream2   = new StreamController.broadcast().stream;
+
+// the merged output stream
+var merged    = StreamExt.combineLatest(stream1, stream2, (a, b) =&gt; a + b);
+</code></pre>
+
+<h3>
+<a name="delay" class="anchor" href="#delay"><span class="octicon octicon-link"></span></a>delay</h3>
+
+<p>The <code>StreamExt.delay</code> function creates a new stream whose events are directly sourced from the input stream but each delivered after the specified duration.</p>
+
+<p>The delayed stream will complete if:</p>
+
+<ul>
+<li>the input has completed and the delayed complete message has been delivered</li>
+<li>the <code>closeOnError</code> flag is set to true and an error is received from the input stream</li>
+</ul><p><strong>Dart code</strong></p>
+
+<pre><code>var input   = new StreamController.broadcast().stream;
+
+// each event from the input stream is delivered 1 second after it was originally received
+var delayed = StreamExt.delay(input, new Duration(seconds : 1));
+</code></pre>
+
+<h3>
+<a name="throttle" class="anchor" href="#throttle"><span class="octicon octicon-link"></span></a>throttle</h3>
+
+<p>The <code>StreamExt.throttle</code> function creates a new stream based on events produced by the specified input, upon forwarding an event from the input stream it'll ignore any subsequent events produced by the input stream until the the flow of new events has paused for the specified duration, after which the last event produced by the input stream is then delivered.</p>
+
+<p>The throttled stream will complete if:</p>
+
+<ul>
+<li>the input stream has completed and the any throttled message has been delivered</li>
+<li>the <code>closeOnError</code> flag is set to true and an error is received from the input stream</li>
+</ul><p><strong>Dart code</strong></p>
+
+<pre><code>var input   = new StreamController.broadcast().stream;
+var delayed = StreamExt.throttle(input, new Duration(seconds : 1));
+</code></pre>
+
+<h3>
+<a name="zip" class="anchor" href="#zip"><span class="octicon octicon-link"></span></a>zip</h3>
+
+<p>The <code>StreamExt.zip</code> function zips two streams into one by combining their elements in a pairwise fashion.</p>
+
+<p>The zipped stream will complete if:</p>
+
+<ul>
+<li>either input stream has completed</li>
+<li>[closeOnError] flag is set to true and an error is received</li>
+</ul><p><strong>Dart code</strong></p>
+
+<pre><code>var mouseMove = document.onMouseMove;
+var mouseDrags =
+  StreamExt
+    .zip(mouseMove,
+         mouseMove.skip(1),
+         (MouseEvent left, MouseEvent right) =&gt; new MouseMove(right.screen.x - left.screen.x, right.screen.y - left.screen.y))
+    .where((_) =&gt; isDragging);
+</code></pre>
+
+<h3>
+<a name="window" class="anchor" href="#window"><span class="octicon octicon-link"></span></a>window</h3>
+
+<p>The <code>StreamExt.window</code> function projects each element from the input stream into consecutive non-overlapping windows.
+Each element proudced by the output stream contains a list of elements up to the specified count.</p>
+
+<p>The output stream will complete if:</p>
+
+<ul>
+<li>the input stream has completed and any buffered elements have been upshed</li>
+<li>[closeOnError] flag is set to true and an error is received</li>
+</ul><p><strong>Dart code</strong></p>
+
+<pre><code>var input    = new StreamController.broadcast().stream;
+var windowed = StreamExt.window(input, 3);
+</code></pre>
+
+<h3>
+<a name="buffer" class="anchor" href="#buffer"><span class="octicon octicon-link"></span></a>buffer</h3>
+
+<p>The <code>StreamExt.buffer</code> function creates a new stream which buffers elements from the input stream produced within the sepcified duration.
+Each element produced by the output stream is a list.</p>
+
+<p>The output stream will complete if:</p>
+
+<ul>
+<li>the input stream has completed and any buffered elements have been upshed</li>
+<li>[closeOnError] flag is set to true and an error is received</li>
+</ul><p><strong>Dart code</strong></p>
+
+<pre><code>var input    = new StreamController.broadcast().stream;
+var buffered = StreamExt.buffer(input, new Duration(seconds : 1));
+</code></pre>
+
+<h3>
+<a name="scan" class="anchor" href="#scan"><span class="octicon octicon-link"></span></a>scan</h3>
+
+<p>The <code>StreamExt.scan</code> function creates a new stream by applying an accumulator function over the elements produced by the input stream and
+returns each intermediate result with the specified seed and accumulator.</p>
+
+<p>The output stream will complete if:</p>
+
+<ul>
+<li>the input stream has completed</li>
+<li>[closeOnError] flag is set to true and an error is received</li>
+</ul><p><strong>Dart code</strong></p>
+
+<pre><code>var input   = new StreamController.broadcast().stream;
+var sums    = StreamExt.scan(input, 0, (acc, elem) =&gt; acc + elem);
+</code></pre>
+
+<h2>
+<a name="examples" class="anchor" href="#examples"><span class="octicon octicon-link"></span></a>Examples</h2>
+
+<p>Please take a look at the <strong>example</strong> directory for more complete and meaningful usages of each of the extension functions.</p>
+
+<h2>
+<a name="package-import" class="anchor" href="#package-import"><span class="octicon octicon-link"></span></a>Package Import</h2>
+
+<p>Add the <code>stream_ext</code> depedency to your pubspec.yaml ...</p>
+
+<pre><code>name: hello_world
+description: hello world
+dependencies:
+  stream_ext: { git: https://github.com/theburningmonk/stream_ext.git }
+</code></pre>
+
+<p>... then import the library in your Dart code.</p>
+
+<pre><code>import 'package:stream_ext/stream_ext.dart';
+</code></pre>
+      </section>
+      <footer>
+        <p>This project is maintained by <a href="https://github.com/theburningmonk">theburningmonk</a></p>
+        <p><small>Hosted on GitHub Pages &mdash; Theme by <a href="https://github.com/orderedlist">orderedlist</a></small></p>
+      </footer>
+    </div>
+    <script src="javascripts/scale.fix.js"></script>
+    
+  </body>
+</html>
