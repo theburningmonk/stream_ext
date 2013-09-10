@@ -3,6 +3,8 @@ library stream_ext;
 import 'dart:async';
 
 class StreamExt {
+  static _id(x) => x; // the identity function
+
   static _getOnErrorHandler(StreamController controller, closeOnError) {
       return closeOnError
               ? (err) {
@@ -310,12 +312,16 @@ class StreamExt {
   }
 
   /**
-   * A specialization of the more general [scan] function, this
+   * A specialized form of the [scan] function, this function creates a new stream of running totals by optionally
+   * applying the supplied [map] function on each element in order to increment the current total.
    *
+   * If a map function is not specified then the identity function is used.
+   * NOTE: any exceptions either in the [map] function or the aggregation process will be forwarded as errors in
+   * the output stream.
    */
   static Stream sum(Stream input, { num map (dynamic elem), bool closeOnError : false, bool sync : false }) {
     if (map == null) {
-      map = (elem) => elem;
+      map = _id;
     }
 
     return scan(input, 0, (acc, elem) => acc + map(elem), closeOnError : closeOnError, sync : sync);
