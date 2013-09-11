@@ -2,7 +2,7 @@ name: stream_ext
 version: 0.1.0
 author: Yan Cui <theburningmonk@gmail.com>
 description: Extension functions for Stream class
-homepage: https://github.com/theburningmonk/stream_ext
+homepage: http://theburningmonk.github.io/stream_ext/
 dev_dependencies:
   browser: any
   js: any
