@@ -43,7 +43,7 @@
 <ul>
 <li>both input streams have completed</li>
 <li>the <code>closeOnError</code> flag is set to true and an error is received from either input stream</li>
-</ul><p><strong>Dart code</strong></p>
+</ul><p>Example:</p>
 
 <pre><code>// the input streams
 var stream1   = new StreamController.broadcast().stream;
@@ -63,7 +63,7 @@ var merged    = StreamExt.merge(stream1, stream2);
 <ul>
 <li>both input streams have completed</li>
 <li>[closeOnError] flag is set to true and an error is received</li>
-</ul><p><strong>Dart code</strong></p>
+</ul><p>Example</p>
 
 <pre><code>// the input streams
 var stream1   = new StreamController.broadcast().stream;
@@ -83,7 +83,7 @@ var merged    = StreamExt.combineLatest(stream1, stream2, (a, b) =&gt; a + b);
 <ul>
 <li>the input has completed and the delayed complete message has been delivered</li>
 <li>the <code>closeOnError</code> flag is set to true and an error is received from the input stream</li>
-</ul><p><strong>Dart code</strong></p>
+</ul><p>Example</p>
 
 <pre><code>var input   = new StreamController.broadcast().stream;
 
@@ -101,7 +101,7 @@ var delayed = StreamExt.delay(input, new Duration(seconds : 1));
 <ul>
 <li>the input stream has completed and the any throttled message has been delivered</li>
 <li>the <code>closeOnError</code> flag is set to true and an error is received from the input stream</li>
-</ul><p><strong>Dart code</strong></p>
+</ul><p>Example</p>
 
 <pre><code>var input   = new StreamController.broadcast().stream;
 var delayed = StreamExt.throttle(input, new Duration(seconds : 1));
@@ -117,7 +117,7 @@ var delayed = StreamExt.throttle(input, new Duration(seconds : 1));
 <ul>
 <li>either input stream has completed</li>
 <li>[closeOnError] flag is set to true and an error is received</li>
-</ul><p><strong>Dart code</strong></p>
+</ul><p>Example</p>
 
 <pre><code>var mouseMove = document.onMouseMove;
 var mouseDrags =
@@ -139,7 +139,7 @@ Each element proudced by the output stream contains a list of elements up to the
 <ul>
 <li>the input stream has completed and any buffered elements have been upshed</li>
 <li>[closeOnError] flag is set to true and an error is received</li>
-</ul><p><strong>Dart code</strong></p>
+</ul><p>Example</p>
 
 <pre><code>var input    = new StreamController.broadcast().stream;
 var windowed = StreamExt.window(input, 3);
@@ -156,7 +156,7 @@ Each element produced by the output stream is a list.</p>
 <ul>
 <li>the input stream has completed and any buffered elements have been upshed</li>
 <li>[closeOnError] flag is set to true and an error is received</li>
-</ul><p><strong>Dart code</strong></p>
+</ul><p>Example</p>
 
 <pre><code>var input    = new StreamController.broadcast().stream;
 var buffered = StreamExt.buffer(input, new Duration(seconds : 1));
@@ -173,10 +173,32 @@ returns each intermediate result with the specified seed and accumulator.</p>
 <ul>
 <li>the input stream has completed</li>
 <li>[closeOnError] flag is set to true and an error is received</li>
-</ul><p><strong>Dart code</strong></p>
+</ul><p>Example</p>
 
 <pre><code>var input   = new StreamController.broadcast().stream;
+
+// create running totals
 var sums    = StreamExt.scan(input, 0, (acc, elem) =&gt; acc + elem);
+</code></pre>
+
+<h3>
+<a name="summinmax" class="anchor" href="#summinmax"><span class="octicon octicon-link"></span></a>sum/min/max</h3>
+
+<p>The <code>StreamExt.sum</code>, <code>StreamExt.min</code> and <code>StreamExt.max</code> functions returns an aggregated value (be it the sum, min or max) from the input <code>Stream</code> and return the aggregate as a <code>Future</code> which is completed when the input <code>Stream</code> is finshed.</p>
+
+<p>Not that with these functions, if the function passed in for the aggregation (e.g. the <code>compare</code> function for min and max) throws an exception, then depending on the <code>closeOnError</code> flag the methods will behave differently:</p>
+
+<ul>
+<li>if <code>closeOnError</code> flag is ture, then the returned <code>Future</code> completes with the thrown exception, so you will want to call <code>.catchError</code> on the result to handle this in your code</li>
+<li>otherwise, any exceptions will be swallowed and the input value that causes the exception will also be excluded from the aggregated value</li>
+</ul><p>Example</p>
+
+<pre><code>// assuming inputs are of numeric value
+var input   = new StreamController.broadcast().stream;
+
+Future sum  = StreamExt.sum(input);
+Future min  = StreamExt.min(input, (a, b) =&gt; a.compareTo(b));
+Future max  = StreamExt.max(input, (a, b) =&gt; a.compareTo(b));
 </code></pre>
 
 <h2>
