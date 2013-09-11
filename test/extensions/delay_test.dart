@@ -55,20 +55,18 @@ class DelayTests {
       controller.add(1);
       controller.add(2);
 
-      controller.close();
+      controller.close()
+        .then((_) => new Future.delayed(new Duration(milliseconds : 2)))
+        .then((_) {
+          expect(list.length, equals(3), reason : "delayed stream should have all three events");
 
-      // closing the controllers happen asynchronously, so give it a few milliseconds for both to complete and trigger
-      // the merged stream to also complete
-      new Timer(new Duration(milliseconds : 10), () {
-        expect(list.length, equals(3), reason : "delayed stream should have all three events");
+          for (var i = 0; i <= 2; i++) {
+            expect(list.where((n) => n == i).length, equals(1), reason : "delayed stream should contain $i");
+          }
 
-        for (var i = 0; i <= 2; i++) {
-          expect(list.where((n) => n == i).length, equals(1), reason : "delayed stream should contain $i");
-        }
-
-        expect(hasErr, equals(true), reason : "delayed stream should have received error");
-        expect(isDone, equals(true), reason : "delayed stream should be completed");
-      });
+          expect(hasErr, equals(true), reason : "delayed stream should have received error");
+          expect(isDone, equals(true), reason : "delayed stream should be completed");
+        });
     });
   }
 
@@ -86,11 +84,13 @@ class DelayTests {
                  onDone  : ()  => isDone = true);
 
       controller.add(0);
-      controller.addError("failed");
-      controller.add(1);
-      controller.add(2);
 
-      controller.close();
+      // give sufficient time for the first message to be delivered before sending error
+      new Timer(new Duration(milliseconds : 2), () {
+        controller.addError("failed");
+        controller.add(1);
+        controller.add(2);
+      });
 
       // closing the controllers happen asynchronously, so give it a few milliseconds for both to complete and trigger
       // the merged stream to also complete

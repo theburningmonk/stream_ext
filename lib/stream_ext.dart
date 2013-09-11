@@ -124,8 +124,8 @@ class StreamExt {
     delayCall(f, [ x ]) => x == null ? new Timer(duration, f) : new Timer(duration, () => f(x));
 
     input.listen((x) => delayCall(() => _tryAdd(controller, x)),
-                 onError : (err) => delayCall(onError, err),
-                 onDone  : ()    => delayCall(() => _tryClose(controller)));
+                 onError : onError,
+                 onDone  : () => delayCall(() => _tryClose(controller)));
 
     return controller.stream;
   }
