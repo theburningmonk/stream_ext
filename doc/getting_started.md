@@ -10,7 +10,7 @@ The merged stream will forward any events and errors received from the input str
 * both input streams have completed
 * the `closeOnError` flag is set to true and an error is received from either input stream
 
-**Dart code**
+Example:
 
     // the input streams
     var stream1   = new StreamController.broadcast().stream;
@@ -28,7 +28,7 @@ The merged stream will complete if:
 * both input streams have completed
 * [closeOnError] flag is set to true and an error is received
 
-**Dart code**
+Example
 
     // the input streams
     var stream1   = new StreamController.broadcast().stream;
@@ -46,7 +46,7 @@ The delayed stream will complete if:
 * the input has completed and the delayed complete message has been delivered
 * the `closeOnError` flag is set to true and an error is received from the input stream
 
-**Dart code**
+Example
 
     var input   = new StreamController.broadcast().stream;
 
@@ -62,7 +62,7 @@ The throttled stream will complete if:
 * the input stream has completed and the any throttled message has been delivered
 * the `closeOnError` flag is set to true and an error is received from the input stream
 
-**Dart code**
+Example
 
     var input   = new StreamController.broadcast().stream;
     var delayed	= StreamExt.throttle(input, new Duration(seconds : 1));
@@ -76,7 +76,7 @@ The zipped stream will complete if:
 * either input stream has completed
 * [closeOnError] flag is set to true and an error is received
 
-**Dart code**
+Example
 
     var mouseMove = document.onMouseMove;
     var mouseDrags =
@@ -96,7 +96,7 @@ The output stream will complete if:
 * the input stream has completed and any buffered elements have been upshed
 * [closeOnError] flag is set to true and an error is received
 
-**Dart code**
+Example
 
     var input 	 = new StreamController.broadcast().stream;
     var windowed = StreamExt.window(input, 3);
@@ -111,7 +111,7 @@ The output stream will complete if:
 * the input stream has completed and any buffered elements have been upshed
 * [closeOnError] flag is set to true and an error is received
 
-**Dart code**
+Example
 
     var input 	 = new StreamController.broadcast().stream;
     var buffered = StreamExt.buffer(input, new Duration(seconds : 1));
@@ -126,11 +126,32 @@ The output stream will complete if:
 * the input stream has completed
 * [closeOnError] flag is set to true and an error is received
 
-**Dart code**
+Example
 
     var input 	= new StreamController.broadcast().stream;
+    
+    // create running totals
     var sums 	= StreamExt.scan(input, 0, (acc, elem) => acc + elem);
 
+
+### sum/min/max
+
+The `StreamExt.sum`, `StreamExt.min` and `StreamExt.max` functions returns an aggregated value (be it the sum, min or max) from the input `Stream` and return the aggregate as a `Future` which is completed when the input `Stream` is finshed.
+
+Not that with these functions, if the function passed in for the aggregation (e.g. the `compare` function for min and max) throws an exception, then depending on the `closeOnError` flag the methods will behave differently:
+
+* if `closeOnError` flag is ture, then the returned `Future` completes with the thrown exception, so you will want to call `.catchError` on the result to handle this in your code
+* otherwise, any exceptions will be swallowed and the input value that causes the exception will also be excluded from the aggregated value
+
+Example
+
+    // assuming inputs are of numeric value
+    var input 	= new StreamController.broadcast().stream;
+    
+    Future sum 	= StreamExt.sum(input);
+    Future min  = StreamExt.min(input, (a, b) => a.compareTo(b));
+    Future max  = StreamExt.max(input, (a, b) => a.compareTo(b));
+    
 
 ## Examples
 
