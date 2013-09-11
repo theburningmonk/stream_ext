@@ -347,9 +347,8 @@ class StreamExt {
       map = _identity;
     }
 
-    var completer = new Completer();
     var sum = 0;
-
+    var completer = new Completer();
     var onError   = closeOnError ? (err) => completer.completeError(err) : (_) {};
 
     void handleNewEvent(x) => _tryRun(() {
@@ -361,6 +360,39 @@ class StreamExt {
                  onError : onError,
                  onDone  : () {
                    if (!completer.isCompleted) completer.complete(sum);
+                 });
+
+    return completer.future;
+  }
+
+  /**
+   * Returns the average of the elements as a [Future], using the supplied [map] function to convert each element from the input stream into a [num].
+   *
+   * If a [map] function is not specified then the identity function is used.
+   *
+   * If [closeOnError] flag is set to true, then any error in the [map] function will complete the [Future] with the error. Otherwise, any errors
+   * will be swallowed and excluded from the final average.
+   */
+  static Future average(Stream input, { num map (dynamic elem), bool closeOnError : false, bool sync : false }) {
+    if (map == null) {
+      map = _identity;
+    }
+
+    var sum   = 0;
+    var count = 0;
+    var completer = new Completer();
+    var onError   = closeOnError ? (err) => completer.completeError(err) : (_) {};
+
+    void handleNewEvent(x) => _tryRun(() {
+      var newVal = map(x);
+      sum += newVal;
+      count++;
+    }, onError);
+
+    input.listen(handleNewEvent,
+                 onError : onError,
+                 onDone  : () {
+                   if (!completer.isCompleted) completer.complete(sum / count);
                  });
 
     return completer.future;
