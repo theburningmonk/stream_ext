@@ -382,9 +382,7 @@ class StreamExt {
     var minimum;
 
     void handleNewEvent(x) => _tryRun(() {
-      if (minimum == null) {
-        minimum = x;
-      } else if (compare(minimum, x) > 0) {
+      if (minimum == null || compare(minimum, x) > 0) {
         minimum = x;
       }
     }, onError);
