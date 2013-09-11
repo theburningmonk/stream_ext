@@ -3,7 +3,7 @@ library stream_ext;
 import 'dart:async';
 
 class StreamExt {
-  static _id(x) => x; // the identity function
+  static _identity(x) => x; // the identity function
 
   static _getOnErrorHandler(StreamController controller, closeOnError) {
       return closeOnError
@@ -335,18 +335,96 @@ class StreamExt {
   }
 
   /**
-   * A specialized form of the [scan] function, this function creates a new stream of running totals by optionally
-   * applying the supplied [map] function on each element in order to increment the current total.
+   * Returns the sum of the elements as a [Future], using the supplied [map] function to convert each element from the input stream into a [num].
    *
-   * If a map function is not specified then the identity function is used.
-   * NOTE: any exceptions either in the [map] function or the aggregation process will be forwarded as errors in
-   * the output stream.
+   * If a [map] function is not specified then the identity function is used.
+   *
+   * If [closeOnError] flag is set to true, then any error in the [map] function will complete the [Future] with the error. Otherwise, any errors
+   * will be swallowed and excluded from the final sum.
    */
-  static Stream sum(Stream input, { num map (dynamic elem), bool closeOnError : false, bool sync : false }) {
+  static Future sum(Stream input, { num map (dynamic elem), bool closeOnError : false, bool sync : false }) {
     if (map == null) {
-      map = _id;
+      map = _identity;
     }
 
-    return scan(input, 0, (acc, elem) => acc + map(elem), closeOnError : closeOnError, sync : sync);
+    var completer = new Completer();
+    var sum = 0;
+
+    var onError   = closeOnError ? (err) => completer.completeError(err) : (_) {};
+
+    void handleNewEvent(x) => _tryRun(() {
+      var newVal = map(x);
+      sum += newVal;
+    }, onError);
+
+    input.listen(handleNewEvent,
+                 onError : onError,
+                 onDone  : () {
+                   if (!completer.isCompleted) completer.complete(sum);
+                 });
+
+    return completer.future;
+  }
+
+  /**
+   * Returns the minimum element as a [Future], as determined by the supplied [compare] function which compares the current minimum value against
+   * any new value produced by the input [Stream].
+   *
+   * The [compare] function must act as a [Comparator].
+   *
+   * If [closeOnError] flag is set to true, then any error in the [compare] function will complete the [Future] with the error. Otherwise, any errors
+   * will be swallowed and excluded from the final minimum.
+   */
+  static Future min(Stream input, int compare(dynamic a, dynamic b), { bool closeOnError : false, bool sync : false }) {
+    var completer = new Completer();
+    var onError   = closeOnError ? (err) => completer.completeError(err) : (_) {};
+
+    var minimum;
+
+    void handleNewEvent(x) => _tryRun(() {
+      if (minimum == null) {
+        minimum = x;
+      } else if (compare(minimum, x) > 0) {
+        minimum = x;
+      }
+    }, onError);
+
+    input.listen(handleNewEvent,
+                 onError : onError,
+                 onDone  : () {
+                   if (!completer.isCompleted) completer.complete(minimum);
+                 });
+
+    return completer.future;
+  }
+
+  /**
+   * Returns the maximum element as a [Future], as determined by the supplied [compare] function which compares the current maximum value against
+   * any new value produced by the input [Stream].
+   *
+   * The [compare] function must act as a [Comparator].
+   *
+   * If [closeOnError] flag is set to true, then any error in the [compare] function will complete the [Future] with the error. Otherwise, any errors
+   * will be swallowed and excluded from the final maximum.
+   */
+  static Future max(Stream input, int compare(dynamic a, dynamic b), { bool closeOnError : false, bool sync : false }) {
+    var completer = new Completer();
+    var onError   = closeOnError ? (err) => completer.completeError(err) : (_) {};
+
+    var maximum;
+
+    void handleNewEvent(x) => _tryRun(() {
+      if (maximum == null || compare(maximum, x) < 0) {
+        maximum = x;
+      }
+    }, onError);
+
+    input.listen(handleNewEvent,
+                 onError : onError,
+                 onDone  : () {
+                   if (!completer.isCompleted) completer.complete(maximum);
+                 });
+
+    return completer.future;
   }
 }
