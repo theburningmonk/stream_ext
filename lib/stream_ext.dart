@@ -38,29 +38,71 @@ class StreamExt {
   }
 
   /**
-   * Merges two stream into one, the merged stream will forward any elements and errors received from the input streams.
+   * Returns the average of the elements as a [Future], using the supplied [map] function to convert each element from the input stream into a [num].
    *
-   * The merged stream will complete if:
+   * If a [map] function is not specified then the identity function is used.
    *
-   * * both input streams have completed
+   * If [closeOnError] flag is set to true, then any error in the [map] function will complete the [Future] with the error. Otherwise, any errors
+   * will be swallowed and excluded from the final average.
+   */
+  static Future average(Stream input, { num map (dynamic elem), bool closeOnError : false, bool sync : false }) {
+    if (map == null) {
+      map = _identity;
+    }
+
+    var sum   = 0;
+    var count = 0;
+    var completer = new Completer();
+    var onError   = closeOnError ? (err) => completer.completeError(err) : (_) {};
+
+    void handleNewEvent(x) => _tryRun(() {
+      var newVal = map(x);
+      sum += newVal;
+      count++;
+    }, onError);
+
+    input.listen(handleNewEvent,
+                 onError : onError,
+                 onDone  : () {
+                   if (!completer.isCompleted) completer.complete(sum / count);
+                 });
+
+    return completer.future;
+  }
+
+  /**
+   * Creates a new stream which buffers elements from the input stream produced within the specified duration.
+   *
+   * Each element produced by the output stream is a list.
+   *
+   * The output stream will complete if:
+   *
+   * * the input stream has completed and any buffered elements have been pushed
    * * [closeOnError] flag is set to true and an error is received
    */
-  static Stream merge(Stream stream1, Stream stream2, { bool closeOnError : false, bool sync : false }) {
+  static Stream buffer(Stream input, Duration duration, { bool closeOnError : false, bool sync : false }) {
     var controller = new StreamController.broadcast(sync : sync);
-    var completer1 = new Completer();
-    var completer2 = new Completer();
     var onError    = _getOnErrorHandler(controller, closeOnError);
 
-    stream1.listen((x) => _tryAdd(controller, x),
-                   onError : onError,
-                   onDone  : completer1.complete);
-    stream2.listen((x) => _tryAdd(controller, x),
-                   onError : onError,
-                   onDone  : completer2.complete);
+    var buffer = new List();
+    void pushBuffer() {
+      if (buffer.length > 0) {
+        _tryAdd(controller, buffer.toList()); // add a clone instead of the buffer list
+        buffer.clear();
+      }
+    }
 
-    Future
-      .wait([ completer1.future, completer2.future ])
-      .then((_) => _tryClose(controller));
+    var timer = new Timer.periodic(duration, (_) => pushBuffer());
+
+    input.listen(buffer.add,
+                 onError  : onError,
+                 onDone   : () {
+                   pushBuffer();
+                   _tryClose(controller);
+                   if (timer.isActive) {
+                     timer.cancel();
+                   }
+                 });
 
     return controller.stream;
   }
@@ -131,178 +173,91 @@ class StreamExt {
   }
 
   /**
-   * Creates a new stream who stops the flow of elements produced by the input stream until no new element has been produced by the input stream after the specified duration.
+   * Returns the maximum element as a [Future], as determined by the supplied [compare] function which compares the current maximum value against
+   * any new value produced by the input [Stream].
    *
-   * The throttled stream will complete if:
+   * The [compare] function must act as a [Comparator].
    *
-   * * the input stream has completed and the any throttled message has been delivered
-   * * [closeOnError] flag is set to true and an error is received
+   * If [closeOnError] flag is set to true, then any error in the [compare] function will complete the [Future] with the error. Otherwise, any errors
+   * will be swallowed and excluded from the final maximum.
    */
-  static Stream throttle(Stream input, Duration duration, { bool closeOnError : false, bool sync : false }) {
-    var controller = new StreamController.broadcast(sync : sync);
-    var onError    = _getOnErrorHandler(controller, closeOnError);
+  static Future max(Stream input, int compare(dynamic a, dynamic b), { bool closeOnError : false, bool sync : false }) {
+    var completer = new Completer();
+    var onError   = closeOnError ? (err) => completer.completeError(err) : (_) {};
 
-    var isThrottling = false;
-    var buffer;
-    void handleNewEvent(x) {
-      // if this is the first item then push it
-      if (!isThrottling) {
-        _tryAdd(controller, x);
-        isThrottling = true;
+    var maximum;
 
-        new Timer(duration, () => isThrottling = false);
-      } else {
-        buffer = x;
-        isThrottling = true;
-
-        new Timer(duration, () {
-          // when the timer callback is invoked after the timeout, check if there has been any
-          // new items by comparing the last item against our captured closure 'x'
-          // only push the event to the output stream if the captured event has not been
-          // superceded by a subsequent event
-          if (buffer == x) {
-            _tryAdd(controller, x);
-
-            // reset
-            isThrottling = false;
-            buffer = null;
-          }
-        });
+    void handleNewEvent(x) => _tryRun(() {
+      if (maximum == null || compare(maximum, x) < 0) {
+        maximum = x;
       }
-    }
+    }, onError);
 
     input.listen(handleNewEvent,
                  onError : onError,
                  onDone  : () {
-                    if (isThrottling && buffer != null) {
-                      _tryAdd(controller, buffer);
-                    }
-                    _tryClose(controller);
-                  });
+                   if (!completer.isCompleted) completer.complete(maximum);
+                 });
+
+    return completer.future;
+  }
+
+  /**
+   * Merges two stream into one, the merged stream will forward any elements and errors received from the input streams.
+   *
+   * The merged stream will complete if:
+   *
+   * * both input streams have completed
+   * * [closeOnError] flag is set to true and an error is received
+   */
+  static Stream merge(Stream stream1, Stream stream2, { bool closeOnError : false, bool sync : false }) {
+    var controller = new StreamController.broadcast(sync : sync);
+    var completer1 = new Completer();
+    var completer2 = new Completer();
+    var onError    = _getOnErrorHandler(controller, closeOnError);
+
+    stream1.listen((x) => _tryAdd(controller, x),
+                   onError : onError,
+                   onDone  : completer1.complete);
+    stream2.listen((x) => _tryAdd(controller, x),
+                   onError : onError,
+                   onDone  : completer2.complete);
+
+    Future
+      .wait([ completer1.future, completer2.future ])
+      .then((_) => _tryClose(controller));
 
     return controller.stream;
   }
 
   /**
-   * Zips two streams into one by combining their elements in a pairwise fashion.
+   * Returns the minimum element as a [Future], as determined by the supplied [compare] function which compares the current minimum value against
+   * any new value produced by the input [Stream].
    *
-   * The zipped stream will complete if:
+   * The [compare] function must act as a [Comparator].
    *
-   * * either input stream has completed
-   * * [closeOnError] flag is set to true and an error is received
+   * If [closeOnError] flag is set to true, then any error in the [compare] function will complete the [Future] with the error. Otherwise, any errors
+   * will be swallowed and excluded from the final minimum.
    */
-  static Stream zip(Stream stream1, Stream stream2, dynamic zipper(dynamic item1, dynamic item2), { bool closeOnError : false, bool sync : false }) {
-    var controller = new StreamController.broadcast(sync : sync);
-    var onError    = _getOnErrorHandler(controller, closeOnError);
+  static Future min(Stream input, int compare(dynamic a, dynamic b), { bool closeOnError : false, bool sync : false }) {
+    var completer = new Completer();
+    var onError   = closeOnError ? (err) => completer.completeError(err) : (_) {};
 
-    // lists to track the data that had been buffered for the two streams
-    var buffer1 = new List();
-    var buffer2 = new List();
+    var minimum;
 
-    // handler for new event being added to the list on the left
-    void handleNewEvent(List left, List right, dynamic newValue) {
-      left.add(newValue);
-
-      if (right.isEmpty) {
-        return;
+    void handleNewEvent(x) => _tryRun(() {
+      if (minimum == null || compare(minimum, x) > 0) {
+        minimum = x;
       }
-
-      var item1 = buffer1[0];
-      var item2 = buffer2[0];
-
-      _tryRun(() {
-        _tryAdd(controller, zipper(item1, item2));
-
-        // only remove the items from the buffer after the zipper function succeeds
-        buffer1.removeAt(0);
-        buffer2.removeAt(0);
-      }, onError);
-    }
-
-    stream1.listen((x) => handleNewEvent(buffer1, buffer2, x),
-                   onError : onError,
-                   onDone  : () => _tryClose(controller));
-    stream2.listen((x) => handleNewEvent(buffer2, buffer1, x),
-                   onError : onError,
-                   onDone  : () => _tryClose(controller));
-
-    return controller.stream;
-  }
-
-  /**
-   * Projects each element from the input stream into consecutive non-overlapping windows.
-   *
-   * Each element produced by the output stream will contains a list of elements up to the specified count.
-   *
-   * The output stream will complete if:
-   *
-   * * the input stream has completed and any buffered elements have been pushed
-   * * [closeOnError] flag is set to true and an error is received
-   */
-  static Stream window(Stream input, int count, { bool closeOnError : false, bool sync : false }) {
-    var controller = new StreamController.broadcast(sync : sync);
-    var onError    = _getOnErrorHandler(controller, closeOnError);
-
-    var buffer   = new List();
-    void pushBuffer() {
-      if (buffer.length == count) {
-        _tryAdd(controller, buffer.toList()); // add a clone instead of the buffer list
-        buffer.clear();
-      }
-    }
-
-    void handleNewEvent(x) {
-      buffer.add(x);
-      pushBuffer();
-    }
+    }, onError);
 
     input.listen(handleNewEvent,
                  onError : onError,
                  onDone  : () {
-                   if (buffer.length > 0) {
-                     _tryAdd(controller, buffer.toList()); // add a clone instead of the buffer list
-                   }
-                   _tryClose(controller);
+                   if (!completer.isCompleted) completer.complete(minimum);
                  });
 
-    return controller.stream;
-  }
-
-  /**
-   * Creates a new stream which buffers elements from the input stream produced within the specified duration.
-   *
-   * Each element produced by the output stream is a list.
-   *
-   * The output stream will complete if:
-   *
-   * * the input stream has completed and any buffered elements have been pushed
-   * * [closeOnError] flag is set to true and an error is received
-   */
-  static Stream buffer(Stream input, Duration duration, { bool closeOnError : false, bool sync : false }) {
-    var controller = new StreamController.broadcast(sync : sync);
-    var onError    = _getOnErrorHandler(controller, closeOnError);
-
-    var buffer = new List();
-    void pushBuffer() {
-      if (buffer.length > 0) {
-        _tryAdd(controller, buffer.toList()); // add a clone instead of the buffer list
-        buffer.clear();
-      }
-    }
-
-    var timer = new Timer.periodic(duration, (_) => pushBuffer());
-
-    input.listen(buffer.add,
-                 onError  : onError,
-                 onDone   : () {
-                   pushBuffer();
-                   _tryClose(controller);
-                   if (timer.isActive) {
-                     timer.cancel();
-                   }
-                 });
-
-    return controller.stream;
+    return completer.future;
   }
 
   /**
@@ -366,95 +321,140 @@ class StreamExt {
   }
 
   /**
-   * Returns the average of the elements as a [Future], using the supplied [map] function to convert each element from the input stream into a [num].
+   * Creates a new stream who stops the flow of elements produced by the input stream until no new element has been produced by the input stream after the specified duration.
    *
-   * If a [map] function is not specified then the identity function is used.
+   * The throttled stream will complete if:
    *
-   * If [closeOnError] flag is set to true, then any error in the [map] function will complete the [Future] with the error. Otherwise, any errors
-   * will be swallowed and excluded from the final average.
+   * * the input stream has completed and the any throttled message has been delivered
+   * * [closeOnError] flag is set to true and an error is received
    */
-  static Future average(Stream input, { num map (dynamic elem), bool closeOnError : false, bool sync : false }) {
-    if (map == null) {
-      map = _identity;
+  static Stream throttle(Stream input, Duration duration, { bool closeOnError : false, bool sync : false }) {
+    var controller = new StreamController.broadcast(sync : sync);
+    var onError    = _getOnErrorHandler(controller, closeOnError);
+
+    var isThrottling = false;
+    var buffer;
+    void handleNewEvent(x) {
+      // if this is the first item then push it
+      if (!isThrottling) {
+        _tryAdd(controller, x);
+        isThrottling = true;
+
+        new Timer(duration, () => isThrottling = false);
+      } else {
+        buffer = x;
+        isThrottling = true;
+
+        new Timer(duration, () {
+          // when the timer callback is invoked after the timeout, check if there has been any
+          // new items by comparing the last item against our captured closure 'x'
+          // only push the event to the output stream if the captured event has not been
+          // superceded by a subsequent event
+          if (buffer == x) {
+            _tryAdd(controller, x);
+
+            // reset
+            isThrottling = false;
+            buffer = null;
+          }
+        });
+      }
     }
 
-    var sum   = 0;
-    var count = 0;
-    var completer = new Completer();
-    var onError   = closeOnError ? (err) => completer.completeError(err) : (_) {};
-
-    void handleNewEvent(x) => _tryRun(() {
-      var newVal = map(x);
-      sum += newVal;
-      count++;
-    }, onError);
-
     input.listen(handleNewEvent,
                  onError : onError,
                  onDone  : () {
-                   if (!completer.isCompleted) completer.complete(sum / count);
-                 });
+                    if (isThrottling && buffer != null) {
+                      _tryAdd(controller, buffer);
+                    }
+                    _tryClose(controller);
+                  });
 
-    return completer.future;
+    return controller.stream;
   }
 
   /**
-   * Returns the minimum element as a [Future], as determined by the supplied [compare] function which compares the current minimum value against
-   * any new value produced by the input [Stream].
+   * Projects each element from the input stream into consecutive non-overlapping windows.
    *
-   * The [compare] function must act as a [Comparator].
+   * Each element produced by the output stream will contains a list of elements up to the specified count.
    *
-   * If [closeOnError] flag is set to true, then any error in the [compare] function will complete the [Future] with the error. Otherwise, any errors
-   * will be swallowed and excluded from the final minimum.
+   * The output stream will complete if:
+   *
+   * * the input stream has completed and any buffered elements have been pushed
+   * * [closeOnError] flag is set to true and an error is received
    */
-  static Future min(Stream input, int compare(dynamic a, dynamic b), { bool closeOnError : false, bool sync : false }) {
-    var completer = new Completer();
-    var onError   = closeOnError ? (err) => completer.completeError(err) : (_) {};
+  static Stream window(Stream input, int count, { bool closeOnError : false, bool sync : false }) {
+    var controller = new StreamController.broadcast(sync : sync);
+    var onError    = _getOnErrorHandler(controller, closeOnError);
 
-    var minimum;
-
-    void handleNewEvent(x) => _tryRun(() {
-      if (minimum == null || compare(minimum, x) > 0) {
-        minimum = x;
+    var buffer   = new List();
+    void pushBuffer() {
+      if (buffer.length == count) {
+        _tryAdd(controller, buffer.toList()); // add a clone instead of the buffer list
+        buffer.clear();
       }
-    }, onError);
+    }
+
+    void handleNewEvent(x) {
+      buffer.add(x);
+      pushBuffer();
+    }
 
     input.listen(handleNewEvent,
                  onError : onError,
                  onDone  : () {
-                   if (!completer.isCompleted) completer.complete(minimum);
+                   if (buffer.length > 0) {
+                     _tryAdd(controller, buffer.toList()); // add a clone instead of the buffer list
+                   }
+                   _tryClose(controller);
                  });
 
-    return completer.future;
+    return controller.stream;
   }
 
   /**
-   * Returns the maximum element as a [Future], as determined by the supplied [compare] function which compares the current maximum value against
-   * any new value produced by the input [Stream].
+   * Zips two streams into one by combining their elements in a pairwise fashion.
    *
-   * The [compare] function must act as a [Comparator].
+   * The zipped stream will complete if:
    *
-   * If [closeOnError] flag is set to true, then any error in the [compare] function will complete the [Future] with the error. Otherwise, any errors
-   * will be swallowed and excluded from the final maximum.
+   * * either input stream has completed
+   * * [closeOnError] flag is set to true and an error is received
    */
-  static Future max(Stream input, int compare(dynamic a, dynamic b), { bool closeOnError : false, bool sync : false }) {
-    var completer = new Completer();
-    var onError   = closeOnError ? (err) => completer.completeError(err) : (_) {};
+  static Stream zip(Stream stream1, Stream stream2, dynamic zipper(dynamic item1, dynamic item2), { bool closeOnError : false, bool sync : false }) {
+    var controller = new StreamController.broadcast(sync : sync);
+    var onError    = _getOnErrorHandler(controller, closeOnError);
 
-    var maximum;
+    // lists to track the data that had been buffered for the two streams
+    var buffer1 = new List();
+    var buffer2 = new List();
 
-    void handleNewEvent(x) => _tryRun(() {
-      if (maximum == null || compare(maximum, x) < 0) {
-        maximum = x;
+    // handler for new event being added to the list on the left
+    void handleNewEvent(List left, List right, dynamic newValue) {
+      left.add(newValue);
+
+      if (right.isEmpty) {
+        return;
       }
-    }, onError);
 
-    input.listen(handleNewEvent,
-                 onError : onError,
-                 onDone  : () {
-                   if (!completer.isCompleted) completer.complete(maximum);
-                 });
+      var item1 = buffer1[0];
+      var item2 = buffer2[0];
 
-    return completer.future;
+      _tryRun(() {
+        _tryAdd(controller, zipper(item1, item2));
+
+        // only remove the items from the buffer after the zipper function succeeds
+        buffer1.removeAt(0);
+        buffer2.removeAt(0);
+      }, onError);
+    }
+
+    stream1.listen((x) => handleNewEvent(buffer1, buffer2, x),
+                   onError : onError,
+                   onDone  : () => _tryClose(controller));
+    stream2.listen((x) => handleNewEvent(buffer2, buffer1, x),
+                   onError : onError,
+                   onDone  : () => _tryClose(controller));
+
+    return controller.stream;
   }
 }
