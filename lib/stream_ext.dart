@@ -261,6 +261,39 @@ class StreamExt {
   }
 
   /**
+   * Creates a new stream by taking the last value from the input stream for every specified TimeSpan.
+   *
+   * The sampled stream will complete if:
+   *
+   * * the input stream has completed and any sampled message has been delivered
+   * * [closeOnError] flag is set to true and an error is received
+   */
+  static Stream sample(Stream input, Duration duration, { bool closeOnError : false, bool sync : false }) {
+    var controller = new StreamController.broadcast(sync : sync);
+    var onError    = _getOnErrorHandler(controller, closeOnError);
+
+    var buffer;
+    var timer = new Timer.periodic(duration, (_) {
+      if (buffer != null) {
+        _tryAdd(controller, buffer);
+        buffer = null;
+      }
+    });
+
+    input.listen((x) => buffer = x,
+                 onError : onError,
+                 onDone  : () {
+                   timer.cancel();
+                   if (buffer != null) {
+                     _tryAdd(controller, buffer);
+                   }
+                   _tryClose(controller);
+                 });
+
+    return controller.stream;
+  }
+
+  /**
    * Creates a new stream by applying an accumulator function over the elements produced by the input stream and
    * returns each intermediate result with the specified seed and accumulator.
    *
@@ -325,7 +358,7 @@ class StreamExt {
    *
    * The throttled stream will complete if:
    *
-   * * the input stream has completed and the any throttled message has been delivered
+   * * the input stream has completed and any throttled message has been delivered
    * * [closeOnError] flag is set to true and an error is received
    */
   static Stream throttle(Stream input, Duration duration, { bool closeOnError : false, bool sync : false }) {
