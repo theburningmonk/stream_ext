@@ -179,7 +179,9 @@ class StreamExt {
                      if (completer2.isCompleted) _tryClose(controller);
                    });
     stream2.listen((x) => handleNewValue(x, false),
-                   onError : onError,
+                   onError : (err) {
+                     if (completer1.isCompleted) onError(err);
+                   },
                    onDone  : () {
                      completer2.complete();
 

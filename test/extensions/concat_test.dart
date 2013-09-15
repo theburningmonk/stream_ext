@@ -90,28 +90,29 @@ class ConcatTests {
       var stream2 = controller2.stream;
 
       var list   = new List();
-      var hasErr = false;
+      var errors = new List();
       var isDone = false;
       StreamExt.concat(stream1, stream2, sync : true)
         ..listen(list.add,
-                 onError : (_) => hasErr = true,
+                 onError : errors.add,
                  onDone  : ()  => isDone = true);
 
       controller1.add(0);
       controller2.add(1); // ignored
-      controller2.addError("failed");
+      controller2.addError("failed1"); // ignored since we're still yield stream 1
       controller2.add(2); // ignored
+      controller1.addError("failed2");
       controller1.add(3);
       controller1.close();
       controller2.add(4);
-      controller2.addError("failed");
+      controller2.addError("failed3");
       controller2.add(5);
       controller2.close()
         .then((_) {
           expect(list.length, equals(4),       reason : "concatenated stream should have only 4 events");
           expect(list, equals([ 0, 3, 4, 5 ]), reason : "concatenated stream should contain values 0, 3, 4 and 5");
 
-          expect(hasErr, equals(true), reason : "concatenated stream should have received error");
+          expect(errors, equals([ "failed2", "failed3" ]), reason : "concatenated stream should have received error");
           expect(isDone, equals(true), reason : "concatenated stream should be completed");
         });
     });
