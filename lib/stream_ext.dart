@@ -152,7 +152,13 @@ class StreamExt {
   }
 
   /**
-   * Concatenates the two input streams together,
+   * Concatenates the two input streams together, when the first stream completes the second stream is subscribed to. Until the first stream is done any
+   * values and errors from the second stream is ignored.
+   *
+   * The concatenated stream will complete if:
+   *
+   * * both input streams have completed (if stream 2 completes before stream 1 then the concatenated stream is completed when stream 1 completes)
+   * * [closeOnError] flag is set to true and an error is received in the active input stream (stream 1 until it completes, then stream 2)
    */
   static Stream concat(Stream stream1, Stream stream2, { bool closeOnError : false, bool sync : false }) {
     var controller = new StreamController.broadcast(sync : sync);
@@ -175,7 +181,7 @@ class StreamExt {
                    onDone  : () {
                      completer1.complete();
 
-                     // close the output stream eagerly if stream 1 had already completed by now
+                     // close the output stream eagerly if stream 2 had already completed by now
                      if (completer2.isCompleted) _tryClose(controller);
                    });
     stream2.listen((x) => handleNewValue(x, false),
