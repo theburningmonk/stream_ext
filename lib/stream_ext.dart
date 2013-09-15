@@ -152,6 +152,49 @@ class StreamExt {
   }
 
   /**
+   * Concatenates the two input streams together,
+   */
+  static Stream concat(Stream stream1, Stream stream2, { bool closeOnError : false, bool sync : false }) {
+    var controller = new StreamController.broadcast(sync : sync);
+    var onError    = _getOnErrorHandler(controller, closeOnError);
+    var completer1 = new Completer();
+    var completer2 = new Completer();
+
+    // note : this looks somewhat convoluted and unnecessary, but the reason to subscribe to both input streams and use
+    // another bool flag to indicate if we're handling value from stream 1 is to help us more gracefully handle the case
+    // when the second stream completes before the first so that when the first stream completes it should actually
+    // complete theoutput stream rather than attempt to subscribed to the second stream at that point
+    void handleNewValue (x, isStream1) {
+      if (isStream1 == !completer1.isCompleted) {
+        _tryAdd(controller, x);
+      }
+    };
+
+    stream1.listen((x) => handleNewValue(x, true),
+                   onError : onError,
+                   onDone  : () {
+                     completer1.complete();
+
+                     // close the output stream eagerly if stream 1 had already completed by now
+                     if (completer2.isCompleted) _tryClose(controller);
+                   });
+    stream2.listen((x) => handleNewValue(x, false),
+                   onError : onError,
+                   onDone  : () {
+                     completer2.complete();
+
+                     // close the output stream eagerly if stream 1 had already completed by now
+                     if (completer1.isCompleted) _tryClose(controller);
+                   });
+
+    Future
+      .wait([ completer1.future, completer2.future ])
+      .then((_) => _tryClose(controller));
+
+    return controller.stream;
+  }
+
+  /**
    * Creates a new stream whose elements are sourced from the input stream but each delivered after the specified duration.
    *
    * The delayed stream will complete if:

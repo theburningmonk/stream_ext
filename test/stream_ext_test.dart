@@ -7,6 +7,7 @@ import 'package:stream_ext/stream_ext.dart';
 part "extensions/average_test.dart";
 part "extensions/buffer_test.dart";
 part "extensions/combineLatest_test.dart";
+part "extensions/concat_test.dart";
 part "extensions/delay_test.dart";
 part "extensions/max_test.dart";
 part "extensions/merge_test.dart";
@@ -22,6 +23,7 @@ main() {
   new AverageTests().start();
   new BufferTests().start();
   new CombineLatestTests().start();
+  new ConcatTests().start();
   new DelayTests().start();
   new MaxTests().start();
   new MergeTests().start();
