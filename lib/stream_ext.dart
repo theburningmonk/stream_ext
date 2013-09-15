@@ -55,13 +55,13 @@ class StreamExt {
     var completer = new Completer();
     var onError   = closeOnError ? (err) => completer.completeError(err) : (_) {};
 
-    void handleNewEvent(x) => _tryRun(() {
+    void handleNewValue(x) => _tryRun(() {
       var newVal = map(x);
       sum += newVal;
       count++;
     }, onError);
 
-    input.listen(handleNewEvent,
+    input.listen(handleNewValue,
                  onError : onError,
                  onDone  : () {
                    if (!completer.isCompleted) completer.complete(sum / count);
@@ -125,7 +125,7 @@ class StreamExt {
     var item1;
     var item2;
 
-    void handleNewEvent() {
+    void handleNewValue() {
       if (item1 != null && item2 != null) {
         _tryRun(() => _tryAdd(controller, selector(item1, item2)), onError);
       }
@@ -133,13 +133,13 @@ class StreamExt {
 
     stream1.listen((x) {
         item1 = x;
-        handleNewEvent();
+        handleNewValue();
       },
       onError : onError,
       onDone  : completer1.complete);
     stream2.listen((x) {
         item2 = x;
-        handleNewEvent();
+        handleNewValue();
       },
       onError : onError,
       onDone  : completer2.complete);
@@ -187,13 +187,13 @@ class StreamExt {
 
     var maximum;
 
-    void handleNewEvent(x) => _tryRun(() {
+    void handleNewValue(x) => _tryRun(() {
       if (maximum == null || compare(maximum, x) < 0) {
         maximum = x;
       }
     }, onError);
 
-    input.listen(handleNewEvent,
+    input.listen(handleNewValue,
                  onError : onError,
                  onDone  : () {
                    if (!completer.isCompleted) completer.complete(maximum);
@@ -245,13 +245,13 @@ class StreamExt {
 
     var minimum;
 
-    void handleNewEvent(x) => _tryRun(() {
+    void handleNewValue(x) => _tryRun(() {
       if (minimum == null || compare(minimum, x) > 0) {
         minimum = x;
       }
     }, onError);
 
-    input.listen(handleNewEvent,
+    input.listen(handleNewValue,
                  onError : onError,
                  onDone  : () {
                    if (!completer.isCompleted) completer.complete(minimum);
@@ -275,14 +275,14 @@ class StreamExt {
 
     var acc = seed;
 
-    void handleNewEvent(x) {
+    void handleNewValue(x) {
       _tryRun(() {
         acc = accumulator(acc, x);
         _tryAdd(controller, acc);
       }, onError);
     }
 
-    input.listen(handleNewEvent,
+    input.listen(handleNewValue,
                  onError : onError,
                  onDone  : () => _tryClose(controller));
 
@@ -306,12 +306,12 @@ class StreamExt {
     var completer = new Completer();
     var onError   = closeOnError ? (err) => completer.completeError(err) : (_) {};
 
-    void handleNewEvent(x) => _tryRun(() {
+    void handleNewValue(x) => _tryRun(() {
       var newVal = map(x);
       sum += newVal;
     }, onError);
 
-    input.listen(handleNewEvent,
+    input.listen(handleNewValue,
                  onError : onError,
                  onDone  : () {
                    if (!completer.isCompleted) completer.complete(sum);
@@ -334,7 +334,7 @@ class StreamExt {
 
     var isThrottling = false;
     var buffer;
-    void handleNewEvent(x) {
+    void handleNewValue(x) {
       // if this is the first item then push it
       if (!isThrottling) {
         _tryAdd(controller, x);
@@ -361,7 +361,7 @@ class StreamExt {
       }
     }
 
-    input.listen(handleNewEvent,
+    input.listen(handleNewValue,
                  onError : onError,
                  onDone  : () {
                     if (isThrottling && buffer != null) {
@@ -395,12 +395,12 @@ class StreamExt {
       }
     }
 
-    void handleNewEvent(x) {
+    void handleNewValue(x) {
       buffer.add(x);
       pushBuffer();
     }
 
-    input.listen(handleNewEvent,
+    input.listen(handleNewValue,
                  onError : onError,
                  onDone  : () {
                    if (buffer.length > 0) {
@@ -429,7 +429,7 @@ class StreamExt {
     var buffer2 = new List();
 
     // handler for new event being added to the list on the left
-    void handleNewEvent(List left, List right, dynamic newValue) {
+    void handleNewValue(List left, List right, dynamic newValue) {
       left.add(newValue);
 
       if (right.isEmpty) {
@@ -448,10 +448,10 @@ class StreamExt {
       }, onError);
     }
 
-    stream1.listen((x) => handleNewEvent(buffer1, buffer2, x),
+    stream1.listen((x) => handleNewValue(buffer1, buffer2, x),
                    onError : onError,
                    onDone  : () => _tryClose(controller));
-    stream2.listen((x) => handleNewEvent(buffer2, buffer1, x),
+    stream2.listen((x) => handleNewValue(buffer2, buffer1, x),
                    onError : onError,
                    onDone  : () => _tryClose(controller));
 
