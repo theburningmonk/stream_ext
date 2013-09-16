@@ -127,26 +127,28 @@ class ConcatTests {
       var stream2 = controller2.stream;
 
       var list   = new List();
-      var hasErr = false;
+      var error;
       var isDone = false;
-      StreamExt.merge(stream1, stream2, closeOnError : true, sync : true)
+      StreamExt.concat(stream1, stream2, closeOnError : true, sync : true)
         ..listen(list.add,
-                 onError : (_) => hasErr = true,
-                 onDone  : ()  => isDone = true);
+                 onError : (err) => error = err,
+                 onDone  : ()    => isDone = true);
 
       controller1.add(0);
-      controller2.addError("failed");
+      controller2.addError("failed1"); // ignored
       controller1.add(1);
+      controller1.close();
+      controller2.addError("failed2");
       controller2.add(2);
 
       Future
         .wait([ controller1.close(), controller2.close() ])
         .then((_) {
-          expect(list.length, equals(1), reason : "concatenated stream should have only one event before the error");
+          expect(list.length, equals(2), reason : "concatenated stream should have only two events before the error");
           expect(list[0],     equals(0), reason : "concatenated stream should contain the event value 0");
 
-          expect(hasErr, equals(true), reason : "concatenated stream should have received error");
-          expect(isDone, equals(true), reason : "concatenated stream should be completed");
+          expect(error,  equals("failed2"), reason : "concatenated stream should have received error");
+          expect(isDone, equals(true),      reason : "concatenated stream should be completed");
         });
     });
   }

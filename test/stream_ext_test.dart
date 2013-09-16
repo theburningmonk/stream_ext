@@ -14,6 +14,7 @@ part "extensions/merge_test.dart";
 part "extensions/min_test.dart";
 part "extensions/sample_test.dart";
 part "extensions/scan_test.dart";
+part "extensions/startWith_test.dart";
 part "extensions/sum_test.dart";
 part "extensions/throttle_test.dart";
 part "extensions/window_test.dart";
@@ -30,6 +31,7 @@ main() {
   new MinTests().start();
   new SampleTests().start();
   new ScanTests().start();
+  new StartWithTests().start();
   new SumTests().start();
   new ThrottleTests().start();
   new WindowTests().start();

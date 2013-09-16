@@ -374,6 +374,32 @@ class StreamExt {
   }
 
   /**
+   *
+   */
+  static Stream startWith(Stream input, Iterable values, { bool closeOnError : false, bool sync : false }) {
+    // placeholder for a function that'll be reponsible for adding the data to the StreamController once it's been constructed
+    var addValues;
+
+    // note : add the specified values when the stream is subscribed otherwise the data will never be received as they're added
+    // before any listeners had started to listen to the stream
+    // note : since we can't reference the 'controller' variable in the 'onListen' constructor param and there's no way to set
+    // it outside of the constructor, hence the use of the delegate 'addValues' which is invoked only when the output stream
+    // is listened to
+    var controller = new StreamController.broadcast(onListen : () => addValues(), sync : sync);
+    var onError    = _getOnErrorHandler(controller, closeOnError);
+
+    // now that we can refer to the 'controller' variable, initialize the 'addValues' delegate to add all the supplied values
+    // to the stream controller as soon as its output stream is subscribed
+    addValues = () => values.forEach((x) => _tryAdd(controller, x));
+
+    input.listen((x) => _tryAdd(controller, x),
+                 onError : onError,
+                 onDone  : () => _tryClose(controller));
+
+    return controller.stream;
+  }
+
+  /**
    * Returns the sum of the elements as a [Future], using the supplied [map] function to convert each element from the input stream into a [num].
    *
    * If a [map] function is not specified then the identity function is used.
