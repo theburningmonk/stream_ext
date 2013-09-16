@@ -374,7 +374,13 @@ class StreamExt {
   }
 
   /**
+   * Allows you to prefix values to a stream. The supplied values are delivered as soon as the listener is subscribed before
+   * the listener receives values from the source stream.
    *
+   * The output stream will complete if:
+   *
+   * * the input stream has completed
+   * * [closeOnError] flag is set to true and an error is received
    */
   static Stream startWith(Stream input, Iterable values, { bool closeOnError : false, bool sync : false }) {
     // placeholder for a function that'll be reponsible for adding the data to the StreamController once it's been constructed
@@ -390,7 +396,13 @@ class StreamExt {
 
     // now that we can refer to the 'controller' variable, initialize the 'addValues' delegate to add all the supplied values
     // to the stream controller as soon as its output stream is subscribed
-    addValues = () => values.forEach((x) => _tryAdd(controller, x));
+    addValues = () {
+      try {
+        values.forEach((x) => _tryAdd(controller, x));
+      } catch (e) {
+        onError(e);
+      }
+    };
 
     input.listen((x) => _tryAdd(controller, x),
                  onError : onError,
