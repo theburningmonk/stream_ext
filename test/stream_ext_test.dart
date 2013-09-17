@@ -12,6 +12,7 @@ part "extensions/delay_test.dart";
 part "extensions/max_test.dart";
 part "extensions/merge_test.dart";
 part "extensions/min_test.dart";
+part "extensions/repeat_test.dart";
 part "extensions/sample_test.dart";
 part "extensions/scan_test.dart";
 part "extensions/startWith_test.dart";
@@ -29,6 +30,7 @@ main() {
   new MaxTests().start();
   new MergeTests().start();
   new MinTests().start();
+  new RepeatTests().start();
   new SampleTests().start();
   new ScanTests().start();
   new StartWithTests().start();

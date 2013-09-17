@@ -2,6 +2,8 @@ library stream_ext;
 
 import 'dart:async';
 
+part "tuple.dart";
+
 class StreamExt {
   static _identity(x) => x; // the identity function
 
@@ -309,6 +311,69 @@ class StreamExt {
                  });
 
     return completer.future;
+  }
+
+  /**
+   * Allows you to repeat the input stream for the specified number of times. If [repeatCount] is not set, then the input
+   * stream will be repeated **indefinitely**.
+   *
+   * The `done` value is not delivered when the input stream completes, but only after the input stream has been repeated
+   * the required number of times.
+   *
+   * The output stream will complete if:
+   *
+   * * the input stream has been repeated the required number of times
+   * * the [closeOnError] flag is set to true and an error has been received
+   */
+  static Stream repeat(Stream input, { int repeatCount, bool closeOnError : false, bool sync : false }) {
+    var controller = new StreamController.broadcast(sync : sync);
+    var onError    = _getOnErrorHandler(controller, closeOnError);
+
+    var events  = new List();
+    var start   = new DateTime.now();
+    var inputDuration;
+
+    // record a received value for later use
+    void record(x) {
+      // record the time stamp that the value is received at before pushing the value to the output stream
+      var timestamp = new DateTime.now().difference(start);
+      events.add(new _Tuple(x, timestamp));
+
+      _tryAdd(controller, x);
+    }
+
+    // replys the stream inputs once
+    Future replayOnce() {
+      // no event was received, so create a future that completes after the duration of the original stream
+      if (events.length == 0 && inputDuration != null) {
+        return new Future.delayed(inputDuration);
+      }
+
+      return events.fold(
+               new Future.sync((){}),
+               (Future prev, next) =>
+                  prev.then((_) =>
+                    new Future.delayed(next.item2, () => _tryAdd(controller, next.item1))));
+    }
+
+    // recursively replay the stream until we've reached the required count
+    void replayRec([ int count = 0 ]) {
+      if (repeatCount != null && count >= repeatCount) {
+        _tryClose(controller);
+      } else {
+        replayOnce()
+          ..then((_) => replayRec(count + 1));
+      }
+    }
+
+    input.listen(record,
+                 onError : onError,
+                 onDone  : () {
+                   inputDuration = new DateTime.now().difference(start);
+                   replayRec();
+                 });
+
+    return controller.stream;
   }
 
   /**
