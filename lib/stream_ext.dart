@@ -329,24 +329,26 @@ class StreamExt {
     var controller = new StreamController.broadcast(sync : sync);
     var onError    = _getOnErrorHandler(controller, closeOnError);
 
-    var events  = new List();
-    var start   = new DateTime.now();
-    var inputDuration;
+    var events    = new List();
+    var lastValue = new DateTime.now();
+    var end;
 
     // record a received value for later use
     void record(x) {
       // record the time stamp that the value is received at before pushing the value to the output stream
-      var timestamp = new DateTime.now().difference(start);
-      events.add(new _Tuple(x, timestamp));
+      var now = new DateTime.now();
+      var timestamp = now.difference(lastValue);
 
       _tryAdd(controller, x);
+      events.add(new _Tuple(x, timestamp));
+      lastValue = now;
     }
 
     // replys the stream inputs once
     Future replayOnce() {
       // no event was received, so create a future that completes after the duration of the original stream
-      if (events.length == 0 && inputDuration != null) {
-        return new Future.delayed(inputDuration);
+      if (events.length == 0 && end != null) {
+        return new Future.delayed(end.difference(lastValue));
       }
 
       return events.fold(
@@ -369,7 +371,7 @@ class StreamExt {
     input.listen(record,
                  onError : onError,
                  onDone  : () {
-                   inputDuration = new DateTime.now().difference(start);
+                   end = new DateTime.now();
                    replayRec();
                  });
 
