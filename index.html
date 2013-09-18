@@ -16,7 +16,7 @@
     <div class="wrapper">
       <header>
         <h1>stream_ext</h1>
-        <p>A port of the Rx functions to make Dart&#39;s Stream type even easier to use!</p>
+        <p>A port of the Rx functions to make Dart's Stream type even easier to use!</p>
 
         <p class="view"><a href="https://github.com/theburningmonk/stream_ext">View the Project on GitHub <small>theburningmonk/stream_ext</small></a></p>
 
@@ -34,55 +34,87 @@
 <p>Learn about the extension functions for working with <code>Stream</code> type with <code>stream_ext</code>.</p>
 
 <h3>
-<a name="merge" class="anchor" href="#merge"><span class="octicon octicon-link"></span></a>merge</h3>
+<a name="average" class="anchor" href="#average"><span class="octicon octicon-link"></span></a>average</h3>
 
-<p>The <code>StreamExt.merge</code> function merges two stream into a single unitifed output stream.</p>
+<p>The <code>StreamExt.average</code> method returns the average of the values as a <code>Future</code> which completes when the input stream is done.</p>
 
-<p>The merged stream will forward any events and errors received from the input streams and will complete if:</p>
+<p>This method uses the supplied <strong>map</strong> function to convert each input value into a <code>num</code>. If a <strong>map</strong> function is not specified then the identity function is used instead.</p>
+
+<p>If <strong>closeOnError</strong> flag is set to true, then any error in the <strong>map</strong> function or from the input stream will complete the <code>Future</code> with the error.
+Otherwise, any errors will be swallowed and excluded from the final average.</p>
+
+<p>Example:</p>
+
+<pre><code>var input = new Stream.periodic(new Duration(seconds : 1), (n) =&gt; n).take(10);
+StreamExt.average(input).then(print);
+</code></pre>
+
+<h3>
+<a name="buffer" class="anchor" href="#buffer"><span class="octicon octicon-link"></span></a>buffer</h3>
+
+<p>The <code>StreamExt.buffer</code> method creates a new stream which buffers values from the input stream produced within the sepcified <strong>duration</strong> and return the buffered values as a list.</p>
+
+<p>The buffered stream will complete if:</p>
 
 <ul>
-<li>both input streams have completed</li>
-<li>the <code>closeOnError</code> flag is set to true and an error is received from either input stream</li>
-</ul><p>Example:</p>
+<li>the input stream has completed and any buffered values have been pushed</li>
+<li>
+<strong>closeOnError</strong> flag is set to true and an error is received</li>
+</ul><p>Example</p>
 
-<pre><code>// the input streams
-var stream1   = new StreamController.broadcast().stream;
-var stream2   = new StreamController.broadcast().stream;
-
-// the merged output stream
-var merged    = StreamExt.merge(stream1, stream2);
+<pre><code>var input    = new Stream.periodic(new Duration(milliseconds : 10), (n) =&gt; n);
+var buffered = StreamExt.buffer(input, new Duration(seconds : 1));
 </code></pre>
 
 <h3>
 <a name="combinelatest" class="anchor" href="#combinelatest"><span class="octicon octicon-link"></span></a>combineLatest</h3>
 
-<p>The <code>StreamExt.combineLastest</code> merges two streams into one stream by using the selector function whenever one of the streams produces an event.</p>
+<p>The <code>StreamExt.combineLastest</code> method merges two streams into one by using the <strong>selector</strong> function to generate a new value whenever one of the streams produces a value.</p>
 
 <p>The merged stream will complete if:</p>
 
 <ul>
 <li>both input streams have completed</li>
-<li>[closeOnError] flag is set to true and an error is received</li>
+<li>
+<strong>closeOnError</strong> flag is set to true and an error is received</li>
 </ul><p>Example</p>
 
-<pre><code>// the input streams
-var stream1   = new StreamController.broadcast().stream;
-var stream2   = new StreamController.broadcast().stream;
+<pre><code>var stream1 = new Stream.periodic(new Duration(milliseconds : 10), (n) =&gt; n);
+var stream2 = new Stream.periodic(new Duration(milliseconds : 100), (n) =&gt; n);
 
-// the merged output stream
-var merged    = StreamExt.combineLatest(stream1, stream2, (a, b) =&gt; a + b);
+var merged  = StreamExt.combineLatest(stream1, stream2, (a, b) =&gt; a + b);
+</code></pre>
+
+<h3>
+<a name="concat" class="anchor" href="#concat"><span class="octicon octicon-link"></span></a>concat</h3>
+
+<p>The <code>StreamExt.concat</code> method concatenates two streams together, when the first stream completes the second stream is subscribed to.
+Until the first stream is done any values and errors from the second stream is ignored.</p>
+
+<p>The concatenated stream will complete if:</p>
+
+<ul>
+<li>both input streams have completed (if stream 2 completes before stream 1 then the concatenated stream is completed when stream 1 completes)</li>
+<li>
+<strong>closeOnError</strong> flag is set to true and an error is received in the active input stream (stream 1 until it completes, then stream 2)</li>
+</ul><p>Example</p>
+
+<pre><code>var stream1 = new Stream.periodic(new Duration(milliseconds : 10), (n) =&gt; n).take(10);
+var stream2 = new Stream.periodic(new Duration(milliseconds : 100), (n) =&gt; n).take(10);
+
+var concat  = StreamExt.concat(stream1, stream2);
 </code></pre>
 
 <h3>
 <a name="delay" class="anchor" href="#delay"><span class="octicon octicon-link"></span></a>delay</h3>
 
-<p>The <code>StreamExt.delay</code> function creates a new stream whose events are directly sourced from the input stream but each delivered after the specified duration.</p>
+<p>The <code>StreamExt.delay</code> method creates a new stream whose values are sourced from the input stream but each delivered after the specified <strong>duration</strong>.</p>
 
 <p>The delayed stream will complete if:</p>
 
 <ul>
-<li>the input has completed and the delayed complete message has been delivered</li>
-<li>the <code>closeOnError</code> flag is set to true and an error is received from the input stream</li>
+<li>the input has completed and the delayed complete message has been pushed</li>
+<li>the <strong>closeOnError</strong> flag is set to true and an error is received from the input stream</li>
 </ul><p>Example</p>
 
 <pre><code>var input   = new StreamController.broadcast().stream;
@@ -92,31 +124,186 @@ var delayed = StreamExt.delay(input, new Duration(seconds : 1));
 </code></pre>
 
 <h3>
+<a name="max" class="anchor" href="#max"><span class="octicon octicon-link"></span></a>max</h3>
+
+<p>The <code>StreamExt.max</code> method returns the maximum value as a <code>Future</code> when the input stream is done, as determined by the supplied <strong>compare</strong> function which compares the current maximum value against any new value produced by the input stream.</p>
+
+<p>The <strong>compare</strong> function must act as a <code>Comparator</code>.</p>
+
+<p>If <strong>closeOnError</strong> flag is set to true, then any error in the <strong>compare</strong> function will complete the <code>Future</code> with the error.
+Otherwise, any errors will be swallowed and excluded from the final maximum.</p>
+
+<p>Example</p>
+
+<pre><code>var input = new Stream.periodic(new Duration(seconds : 1), (n) =&gt; n).take(10);
+StreamExt.max(input, (a, b) =&gt; a.compareTo(b)).then(print);
+</code></pre>
+
+<h3>
+<a name="merge" class="anchor" href="#merge"><span class="octicon octicon-link"></span></a>merge</h3>
+
+<p>The <code>StreamExt.merge</code> method merges two streams into a single unitifed output stream.</p>
+
+<p>The merged stream will forward any values and errors received from the input streams and will complete if:</p>
+
+<ul>
+<li>both input streams have completed</li>
+<li>the <strong>closeOnError</strong> flag is set to true and an error is received from either input stream</li>
+</ul><p>Example:</p>
+
+<pre><code>var stream1 = new StreamController.broadcast().stream;
+var stream2 = new StreamController.broadcast().stream;
+
+var merged  = StreamExt.merge(stream1, stream2);
+</code></pre>
+
+<h3>
+<a name="min" class="anchor" href="#min"><span class="octicon octicon-link"></span></a>min</h3>
+
+<p>The <code>StreamExt.min</code> method returns the minimum value as a <code>Future</code> when the input stream is done, as determined by the supplied <strong>compare</strong> function which compares the current minimum value against any new value produced by the input stream.</p>
+
+<p>The <strong>compare</strong> function must act as a <code>Comparator</code>.</p>
+
+<p>If <strong>closeOnError</strong> flag is set to true, then any error in the <strong>compare</strong> function will complete the <code>Future</code> with the error.
+Otherwise, any errors will be swallowed and excluded from the final minimum.</p>
+
+<p>Example</p>
+
+<pre><code>var input = new Stream.periodic(new Duration(seconds : 1), (n) =&gt; n).take(10);
+StreamExt.min(input, (a, b) =&gt; a.compareTo(b)).then(print);
+</code></pre>
+
+<h3>
+<a name="repeat" class="anchor" href="#repeat"><span class="octicon octicon-link"></span></a>repeat</h3>
+
+<p>The <code>StreamExt.repeat</code> method allows you to repeat the input stream for the specified number of times.
+If <strong>repeatCount</strong> is not set, then the input stream will be repeated <strong>indefinitely</strong>.</p>
+
+<p>The <code>done</code> value is not delivered when the input stream completes, but only after the input stream has been repeated the required number of times.</p>
+
+<p>The output stream will complete if:</p>
+
+<ul>
+<li>the input stream has been repeated the required number of times</li>
+<li>the <strong>closeOnError</strong> flag is set to true and an error has been received</li>
+</ul><p>Example</p>
+
+<pre><code>var input    = new Stream.periodic(new Duration(seconds : 1), (n) =&gt; n).take(10);
+var repeated = StreamExt.repeat(input, repeatCount : 3);
+</code></pre>
+
+<h3>
+<a name="sample" class="anchor" href="#sample"><span class="octicon octicon-link"></span></a>sample</h3>
+
+<p>The <code>StreamExt.sample</code> method creates a new stream by taking the last value from the input stream for every specified <strong>duration</strong>.</p>
+
+<p>The sampled stream will complete if:</p>
+
+<ul>
+<li>the input stream has completed and any sampled message has been delivered</li>
+<li>the <strong>closeOnError</strong> flag is set to true and an error has been received</li>
+</ul><p>Example</p>
+
+<pre><code>var input   = new Stream.periodic(new Duration(milliseconds : 150), (n) =&gt; n).take(100);
+var sampled = StreamExt.sample(input, new Duration(seconds : 1));
+</code></pre>
+
+<h3>
+<a name="scan" class="anchor" href="#scan"><span class="octicon octicon-link"></span></a>scan</h3>
+
+<p>The <code>StreamExt.scan</code> method creates a new stream by applying an <strong>accumulator</strong> function over the values produced by the input stream and returns each intermediate result with the specified seed and accumulator.</p>
+
+<p>The output stream will complete if:</p>
+
+<ul>
+<li>the input stream has completed</li>
+<li>
+<strong>closeOnError</strong> flag is set to true and an error is received</li>
+</ul><p>Example</p>
+
+<pre><code>var input        = new Stream.periodic(new Duration(milliseconds : 150), (n) =&gt; n);
+var runningTotal = StreamExt.scan(input, 0, (acc, elem) =&gt; acc + elem);
+</code></pre>
+
+<h3>
+<a name="startwith" class="anchor" href="#startwith"><span class="octicon octicon-link"></span></a>startWith</h3>
+
+<p>The <code>StreamExt.startWith</code> method allows you to prefix values to a stream.
+The supplied values are delivered as soon as the listener is subscribed before the listener receives values from the input stream.</p>
+
+<p>The output stream will complete if:</p>
+
+<ul>
+<li>the input stream has completed</li>
+<li>
+<strong>closeOnError</strong> flag is set to true and an error is received</li>
+</ul><p>Example</p>
+
+<pre><code>var input  = new Stream.periodic(new Duration(milliseconds : 150), (n) =&gt; n);
+var output = StreamExt.startWith(input, [ -3, -2, -1 ]);
+</code></pre>
+
+<h3>
+<a name="sum" class="anchor" href="#sum"><span class="octicon octicon-link"></span></a>sum</h3>
+
+<p>The <code>StreamExt.sum</code> method returns the sum of all the input values as a <code>Future</code> when the input stream is done, using the supplied <strong>map</strong> function to convert each input value into a <code>num</code>.</p>
+
+<p>If a <strong>map</strong> function is not specified then the identity function is used.</p>
+
+<p>If <strong>closeOnError</strong> flag is set to true, then any error in the <strong>map</strong> function will complete the <code>Future</code> with the error.
+Otherwise, any errors will be swallowed and excluded from the final sum.</p>
+
+<p>Example</p>
+
+<pre><code>var input = new Stream.periodic(new Duration(seconds : 1), (n) =&gt; n).take(10);
+StreamExt.sum(input).then(print);
+</code></pre>
+
+<h3>
 <a name="throttle" class="anchor" href="#throttle"><span class="octicon octicon-link"></span></a>throttle</h3>
 
-<p>The <code>StreamExt.throttle</code> function creates a new stream based on events produced by the specified input, upon forwarding an event from the input stream it'll ignore any subsequent events produced by the input stream until the the flow of new events has paused for the specified duration, after which the last event produced by the input stream is then delivered.</p>
+<p>The <code>StreamExt.throttle</code> method creates a new stream based on values produced by the specified input, upon forwarding a value from the input stream it'll ignore any subsequent values produced by the input stream until the the flow of new values has paused for the specified duration, after which the last value produced by the input stream is then delivered.</p>
 
 <p>The throttled stream will complete if:</p>
 
 <ul>
 <li>the input stream has completed and the any throttled message has been delivered</li>
-<li>the <code>closeOnError</code> flag is set to true and an error is received from the input stream</li>
+<li>the <strong>closeOnError</strong> flag is set to true and an error is received from the input stream</li>
 </ul><p>Example</p>
 
-<pre><code>var input   = new StreamController.broadcast().stream;
-var delayed = StreamExt.throttle(input, new Duration(seconds : 1));
+<pre><code>var input     = new StreamController.broadcast().stream;
+var throttled = StreamExt.throttle(input, new Duration(seconds : 1));
+</code></pre>
+
+<h3>
+<a name="window" class="anchor" href="#window"><span class="octicon octicon-link"></span></a>window</h3>
+
+<p>The <code>StreamExt.window</code> method projects each value from the input stream into consecutive non-overlapping windows.
+Each value proudced by the output stream contains a list of values up to the specified count.</p>
+
+<p>The output stream will complete if:</p>
+
+<ul>
+<li>the input stream has completed and any buffered elements have been upshed</li>
+<li>
+<strong>closeOnError</strong> flag is set to true and an error is received</li>
+</ul><p>Example</p>
+
+<pre><code>var input    = new StreamController.broadcast().stream;
+var windowed = StreamExt.window(input, 3);
 </code></pre>
 
 <h3>
 <a name="zip" class="anchor" href="#zip"><span class="octicon octicon-link"></span></a>zip</h3>
 
-<p>The <code>StreamExt.zip</code> function zips two streams into one by combining their elements in a pairwise fashion.</p>
+<p>The <code>StreamExt.zip</code> method zips two streams into one by combining their values in a pairwise fashion.</p>
 
 <p>The zipped stream will complete if:</p>
 
 <ul>
 <li>either input stream has completed</li>
-<li>[closeOnError] flag is set to true and an error is received</li>
+<li>
+<strong>closeOnError</strong> flag is set to true and an error is received</li>
 </ul><p>Example</p>
 
 <pre><code>var mouseMove = document.onMouseMove;
@@ -128,79 +315,6 @@ var mouseDrags =
     .where((_) =&gt; isDragging);
 </code></pre>
 
-<h3>
-<a name="window" class="anchor" href="#window"><span class="octicon octicon-link"></span></a>window</h3>
-
-<p>The <code>StreamExt.window</code> function projects each element from the input stream into consecutive non-overlapping windows.
-Each element proudced by the output stream contains a list of elements up to the specified count.</p>
-
-<p>The output stream will complete if:</p>
-
-<ul>
-<li>the input stream has completed and any buffered elements have been upshed</li>
-<li>[closeOnError] flag is set to true and an error is received</li>
-</ul><p>Example</p>
-
-<pre><code>var input    = new StreamController.broadcast().stream;
-var windowed = StreamExt.window(input, 3);
-</code></pre>
-
-<h3>
-<a name="buffer" class="anchor" href="#buffer"><span class="octicon octicon-link"></span></a>buffer</h3>
-
-<p>The <code>StreamExt.buffer</code> function creates a new stream which buffers elements from the input stream produced within the sepcified duration.
-Each element produced by the output stream is a list.</p>
-
-<p>The output stream will complete if:</p>
-
-<ul>
-<li>the input stream has completed and any buffered elements have been upshed</li>
-<li>[closeOnError] flag is set to true and an error is received</li>
-</ul><p>Example</p>
-
-<pre><code>var input    = new StreamController.broadcast().stream;
-var buffered = StreamExt.buffer(input, new Duration(seconds : 1));
-</code></pre>
-
-<h3>
-<a name="scan" class="anchor" href="#scan"><span class="octicon octicon-link"></span></a>scan</h3>
-
-<p>The <code>StreamExt.scan</code> function creates a new stream by applying an accumulator function over the elements produced by the input stream and
-returns each intermediate result with the specified seed and accumulator.</p>
-
-<p>The output stream will complete if:</p>
-
-<ul>
-<li>the input stream has completed</li>
-<li>[closeOnError] flag is set to true and an error is received</li>
-</ul><p>Example</p>
-
-<pre><code>var input   = new StreamController.broadcast().stream;
-
-// create running totals
-var sums    = StreamExt.scan(input, 0, (acc, elem) =&gt; acc + elem);
-</code></pre>
-
-<h3>
-<a name="summinmax" class="anchor" href="#summinmax"><span class="octicon octicon-link"></span></a>sum/min/max</h3>
-
-<p>The <code>StreamExt.sum</code>, <code>StreamExt.min</code> and <code>StreamExt.max</code> functions returns an aggregated value (be it the sum, min or max) from the input <code>Stream</code> and return the aggregate as a <code>Future</code> which is completed when the input <code>Stream</code> is finshed.</p>
-
-<p>Not that with these functions, if the function passed in for the aggregation (e.g. the <code>compare</code> function for min and max) throws an exception, then depending on the <code>closeOnError</code> flag the methods will behave differently:</p>
-
-<ul>
-<li>if <code>closeOnError</code> flag is ture, then the returned <code>Future</code> completes with the thrown exception, so you will want to call <code>.catchError</code> on the result to handle this in your code</li>
-<li>otherwise, any exceptions will be swallowed and the input value that causes the exception will also be excluded from the aggregated value</li>
-</ul><p>Example</p>
-
-<pre><code>// assuming inputs are of numeric value
-var input   = new StreamController.broadcast().stream;
-
-Future sum  = StreamExt.sum(input);
-Future min  = StreamExt.min(input, (a, b) =&gt; a.compareTo(b));
-Future max  = StreamExt.max(input, (a, b) =&gt; a.compareTo(b));
-</code></pre>
-
 <h2>
 <a name="examples" class="anchor" href="#examples"><span class="octicon octicon-link"></span></a>Examples</h2>
 
@@ -209,12 +323,12 @@ Future max  = StreamExt.max(input, (a, b) =&gt; a.compareTo(b));
 <h2>
 <a name="package-import" class="anchor" href="#package-import"><span class="octicon octicon-link"></span></a>Package Import</h2>
 
-<p>Add the <code>stream_ext</code> depedency to your pubspec.yaml ...</p>
+<p>Add the <code>stream_ext</code> dependency to your pubspec.yaml ...</p>
 
 <pre><code>name: hello_world
 description: hello world
 dependencies:
-  stream_ext: { git: https://github.com/theburningmonk/stream_ext.git }
+  stream_ext: any
 </code></pre>
 
 <p>... then import the library in your Dart code.</p>
