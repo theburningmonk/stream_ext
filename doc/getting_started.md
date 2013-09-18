@@ -33,7 +33,7 @@ Example
 
 ### combineLatest
 
-The `StreamExt.combineLastest` function merges two streams into one by using the **selector** function to generate a new value whenever one of the streams produces a value.
+The `StreamExt.combineLastest` method merges two streams into one by using the **selector** function to generate a new value whenever one of the streams produces a value.
 
 The merged stream will complete if:
 * both input streams have completed
