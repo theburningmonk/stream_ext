@@ -188,7 +188,7 @@ Example
 
 ### sum
 
-The `StreamExt.sum` method returns the sum of all the input values as a `Future` when the input stream is done, as determined by the supplied **compare** function which compares the current minimum value against any new value produced by the input stream.
+The `StreamExt.sum` method returns the sum of all the input values as a `Future` when the input stream is done, using the supplied **map** function to convert each input value into a `num`.
 
 If a **map** function is not specified then the identity function is used.
 
