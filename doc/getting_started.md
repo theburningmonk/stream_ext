@@ -260,7 +260,7 @@ Add the `stream_ext` depedency to your pubspec.yaml ...
     name: hello_world
     description: hello world
     dependencies:
-      stream_ext: { git: https://github.com/theburningmonk/stream_ext.git }
+      stream_ext: any
 
 ... then import the library in your Dart code.
 
