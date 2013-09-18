@@ -22,7 +22,7 @@ Example:
 The `StreamExt.buffer` method creates a new stream which buffers values from the input stream produced within the sepcified **duration** and return the buffered values as a list.
 
 The buffered stream will complete if:
-* the input stream has completed and any buffered elements have been pushed
+* the input stream has completed and any buffered values have been pushed
 * **closeOnError** flag is set to true and an error is received
 
 Example
