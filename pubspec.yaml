@@ -1,8 +1,9 @@
 name: stream_ext
-version: 0.1.0
+version: 0.2.0
 author: Yan Cui <theburningmonk@gmail.com>
-description: Extension functions for Stream class
+description: Extension functions for Stream class, adding functions such as merge, zip, delay, combineLatest to make working with streams even easier!
 homepage: http://theburningmonk.github.io/stream_ext/
+documentation: http://stream-ext.s3.amazonaws.com/doc/v0.2.0/index.html
 dev_dependencies:
   browser: any
   js: any
