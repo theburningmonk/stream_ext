@@ -40,12 +40,13 @@ class StreamExt {
   }
 
   /**
-   * Returns the average of the elements as a [Future], using the supplied [map] function to convert each element from the input stream into a [num].
+   * Returns the average of the values as a [Future] which completes when the input stream is done.
    *
+   * This method uses the supplied [map] function to convert each input value into a [num].
    * If a [map] function is not specified then the identity function is used.
    *
-   * If [closeOnError] flag is set to true, then any error in the [map] function will complete the [Future] with the error. Otherwise, any errors
-   * will be swallowed and excluded from the final average.
+   * If [closeOnError] flag is set to true, then any error in the [map] function or from the input stream will complete the [Future] with the error.
+   * Otherwise, any errors will be swallowed and excluded from the final average.
    */
   static Future average(Stream input, { num map (dynamic elem), bool closeOnError : false, bool sync : false }) {
     if (map == null) {
@@ -73,13 +74,12 @@ class StreamExt {
   }
 
   /**
-   * Creates a new stream which buffers elements from the input stream produced within the specified duration.
+   * Creates a new stream which buffers values from the input stream produced within the specified [duration] and
+   * return the buffered values as a list.
    *
-   * Each element produced by the output stream is a list.
+   * The buffered stream will complete if:
    *
-   * The output stream will complete if:
-   *
-   * * the input stream has completed and any buffered elements have been pushed
+   * * the input stream has completed and any buffered values have been pushed
    * * [closeOnError] flag is set to true and an error is received
    */
   static Stream buffer(Stream input, Duration duration, { bool closeOnError : false, bool sync : false }) {
@@ -110,7 +110,7 @@ class StreamExt {
   }
 
   /**
-   * Merges two streams into one by using the selector function to generate new elements whenever one of the input streams produces a new element.
+   * Merges two streams into one by using the [selector] function to generate new a new value whenever one of the input streams produces a new value.
    *
    * The merged stream will complete if:
    *
@@ -205,11 +205,11 @@ class StreamExt {
   }
 
   /**
-   * Creates a new stream whose elements are sourced from the input stream but each delivered after the specified duration.
+   * Creates a new stream whose values are sourced from the input stream but each delivered after the specified duration.
    *
    * The delayed stream will complete if:
    *
-   * * the input stream has completed and the delayed complete message has been delivered
+   * * the input stream has completed and the delayed complete message has been pushed
    * * [closeOnError] flag is set to true and an error is received
    */
   static Stream delay(Stream input, Duration duration, { bool closeOnError : false, bool sync : false }) {
@@ -226,8 +226,8 @@ class StreamExt {
   }
 
   /**
-   * Returns the maximum element as a [Future], as determined by the supplied [compare] function which compares the current maximum value against
-   * any new value produced by the input [Stream].
+   * Returns the maximum value as a [Future] when the input stream is done, as determined by the supplied [compare] function which compares the
+   * current maximum value against any new value produced by the input stream.
    *
    * The [compare] function must act as a [Comparator].
    *
@@ -256,7 +256,7 @@ class StreamExt {
   }
 
   /**
-   * Merges two stream into one, the merged stream will forward any elements and errors received from the input streams.
+   * Merges two stream into one, the merged stream will forward any values and errors received from the input streams.
    *
    * The merged stream will complete if:
    *
@@ -284,7 +284,7 @@ class StreamExt {
   }
 
   /**
-   * Returns the minimum element as a [Future], as determined by the supplied [compare] function which compares the current minimum value against
+   * Returns the minimum value as a [Future], as determined by the supplied [compare] function which compares the current minimum value against
    * any new value produced by the input [Stream].
    *
    * The [compare] function must act as a [Comparator].
@@ -379,7 +379,7 @@ class StreamExt {
   }
 
   /**
-   * Creates a new stream by taking the last value from the input stream for every specified TimeSpan.
+   * Creates a new stream by taking the last value from the input stream for every specified [duration].
    *
    * The sampled stream will complete if:
    *
@@ -412,7 +412,7 @@ class StreamExt {
   }
 
   /**
-   * Creates a new stream by applying an accumulator function over the elements produced by the input stream and
+   * Creates a new stream by applying an [accumulator] function over the values produced by the input stream and
    * returns each intermediate result with the specified seed and accumulator.
    *
    * The output stream will complete if:
@@ -442,7 +442,7 @@ class StreamExt {
 
   /**
    * Allows you to prefix values to a stream. The supplied values are delivered as soon as the listener is subscribed before
-   * the listener receives values from the source stream.
+   * the listener receives values from the input stream.
    *
    * The output stream will complete if:
    *
@@ -479,7 +479,7 @@ class StreamExt {
   }
 
   /**
-   * Returns the sum of the elements as a [Future], using the supplied [map] function to convert each element from the input stream into a [num].
+   * Returns the sum of the values as a [Future], using the supplied [map] function to convert each input value into a [num].
    *
    * If a [map] function is not specified then the identity function is used.
    *
@@ -510,7 +510,7 @@ class StreamExt {
   }
 
   /**
-   * Creates a new stream who stops the flow of elements produced by the input stream until no new element has been produced by the input stream after the specified duration.
+   * Creates a new stream who stops the flow of values produced by the input stream until no new value has been produced by the input stream after the specified duration.
    *
    * The throttled stream will complete if:
    *
@@ -563,13 +563,13 @@ class StreamExt {
   }
 
   /**
-   * Projects each element from the input stream into consecutive non-overlapping windows.
+   * Projects each value from the input stream into consecutive non-overlapping windows.
    *
-   * Each element produced by the output stream will contains a list of elements up to the specified count.
+   * Each value produced by the output stream will contains a list of value up to the specified count.
    *
    * The output stream will complete if:
    *
-   * * the input stream has completed and any buffered elements have been pushed
+   * * the input stream has completed and any buffered values have been pushed
    * * [closeOnError] flag is set to true and an error is received
    */
   static Stream window(Stream input, int count, { bool closeOnError : false, bool sync : false }) {
@@ -602,7 +602,7 @@ class StreamExt {
   }
 
   /**
-   * Zips two streams into one by combining their elements in a pairwise fashion.
+   * Zips two streams into one by combining their values in a pairwise fashion.
    *
    * The zipped stream will complete if:
    *
