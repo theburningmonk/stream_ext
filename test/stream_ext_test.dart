@@ -18,6 +18,8 @@ part "extensions/scan_test.dart";
 part "extensions/startWith_test.dart";
 part "extensions/sum_test.dart";
 part "extensions/throttle_test.dart";
+part "extensions/timeOut_test.dart";
+part "extensions/timeOutAt_test.dart";
 part "extensions/window_test.dart";
 part "extensions/zip_test.dart";
 
@@ -36,6 +38,8 @@ main() {
   new StartWithTests().start();
   new SumTests().start();
   new ThrottleTests().start();
+  new TimeOutTests().start();
+  new TimeOutAtTests().start();
   new WindowTests().start();
   new ZipTests().start();
 }

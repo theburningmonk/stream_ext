@@ -2,6 +2,7 @@ library stream_ext;
 
 import 'dart:async';
 
+part "timeout_error.dart";
 part "tuple.dart";
 
 class StreamExt {
@@ -20,6 +21,10 @@ class StreamExt {
                   controller.addError(err);
                 }
               };
+  }
+
+  static _tryAddError(StreamController controller, error) {
+    if (!controller.isClosed) controller.addError(error);
   }
 
   static _tryClose(StreamController controller) {
@@ -558,6 +563,72 @@ class StreamExt {
                     }
                     _tryClose(controller);
                   });
+
+    return controller.stream;
+  }
+
+  /**
+   * Allows you to terminate a stream with a TimeoutError if the specified [duration] between values elapsed.
+   *
+   * The output stream will complete if:
+   *
+   * * the input stream has completed
+   * * the specified [duration] between input values has elpased
+   * * [closeOnError] flag is set to true and an error is received
+   */
+  static Stream timeOut(Stream input, Duration duration, { bool closeOnError : false, bool sync : false }) {
+    var controller = new StreamController.broadcast(sync : sync);
+    var onError    = _getOnErrorHandler(controller, closeOnError);
+
+    DateTime lastValueTimestamp;
+    void startTimer() {
+      new Timer(duration, () {
+        if (lastValueTimestamp == null ||
+          new DateTime.now().difference(lastValueTimestamp) >= duration) {
+          _tryAddError(controller, new TimeoutError(duration));
+          _tryClose(controller);
+        }
+      });
+    }
+
+    void handleNewValue(x) {
+      _tryAdd(controller, x);
+      lastValueTimestamp = new DateTime.now();
+
+      startTimer();
+    }
+
+    startTimer();
+
+    input.listen(handleNewValue,
+                 onError : onError,
+                 onDone  : () => _tryClose(controller));
+
+    return controller.stream;
+  }
+
+  /**
+   * Allows you to terminate a stream with a TimeoutError at the specified [dueTime].
+   *
+   * The output stream will complete if:
+   *
+   * * the input stream has completed
+   * * the specified [dueTime] has elapsed
+   * * [closeOnError] flag is set to true and an error is received
+   */
+  static Stream timeOutAt(Stream input, DateTime dueTime, { bool closeOnError : false, bool sync : false }) {
+    var controller = new StreamController.broadcast(sync : sync);
+    var onError    = _getOnErrorHandler(controller, closeOnError);
+    var duration   = dueTime.difference(new DateTime.now());
+
+    new Timer(duration, () {
+      _tryAddError(controller, new TimeoutError(duration));
+      _tryClose(controller);
+    });
+
+    input.listen((x) => _tryAdd(controller, x),
+                 onError : onError,
+                 onDone  : () => _tryClose(controller));
 
     return controller.stream;
   }
