@@ -181,7 +181,7 @@ class StreamExt {
       if (isStream1 == !completer1.isCompleted) {
         _tryAdd(controller, x);
       }
-    };
+    }
 
     stream1.listen((x) => handleNewValue(x, true),
                    onError : onError,
@@ -316,6 +316,58 @@ class StreamExt {
                  });
 
     return completer.future;
+  }
+
+  /**
+   *
+   *
+   * The output stream will complete if:
+   *
+   * * both input streams have completed (if stream 2 completes before stream 1 then the concatenated stream is completed when stream 1 completes)
+   * * [closeOnError] flag is set to true and an error is received in the active input stream (stream 1 until it completes, then stream 2)
+   */
+  static Stream onErrorResumeNext(Stream stream1, Stream stream2, { bool closeOnError : false, bool sync : false }) {
+    var controller = new StreamController.broadcast(sync : sync);
+    var onError    = _getOnErrorHandler(controller, closeOnError);
+    var completer1 = new Completer();
+    var completer2 = new Completer();
+
+    // note : this looks somewhat convoluted and unnecessary, but the reason to subscribe to both input streams and use
+    // another bool flag to indicate if we're handling value from stream 1 is to help us more gracefully handle the case
+    // when the second stream completes before the first so that when the first stream completes it should actually
+    // complete theoutput stream rather than attempt to subscribed to the second stream at that point
+    void handleNewValue (x, isStream1) {
+      if (isStream1 == !completer1.isCompleted) {
+        _tryAdd(controller, x);
+      }
+    }
+
+    void resume () {
+      if (!completer1.isCompleted) completer1.complete();
+
+      // close the output stream eagerly if stream 2 had already completed by now
+      if (completer2.isCompleted) _tryClose(controller);
+    }
+
+    stream1.listen((x) => handleNewValue(x, true),
+                   onError : (_) => resume(),
+                   onDone  : resume);
+    stream2.listen((x) => handleNewValue(x, false),
+                   onError : (err) {
+                     if (completer1.isCompleted) onError(err);
+                   },
+                   onDone  : () {
+                     completer2.complete();
+
+                     // close the output stream eagerly if stream 1 had already completed by now
+                     if (completer1.isCompleted) _tryClose(controller);
+                   });
+
+    Future
+      .wait([ completer1.future, completer2.future ])
+      .then((_) => _tryClose(controller));
+
+    return controller.stream;
   }
 
   /**
