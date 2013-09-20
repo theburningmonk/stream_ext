@@ -5,6 +5,7 @@ class TimeOutAtTests {
     group('timeOutAt', () {
       _timeOutAtWithNoValues();
       _timeOutAtWithValues();
+      _timeOutAtInThePast();
       _timeOutAtNotCloseOnError();
       _timeOutAtCloseOnError();
     });
@@ -52,6 +53,29 @@ class TimeOutAtTests {
       new Future.delayed(new Duration(milliseconds : 2), () {
         expect(list.length, equals(1), reason : "output stream should have 1 value");
         expect(list, equals([ 0 ]), reason : "output stream should contain the value 1");
+
+        expect(error is TimeoutError, equals(true), reason : "output stream should have received a timeout error");
+        expect(isDone, equals(true),  reason : "output stream should be completed");
+      }).then((_) => controller.close());
+    });
+  }
+
+  void _timeOutAtInThePast() {
+    test("in the past", () {
+      var controller = new StreamController.broadcast(sync : true);
+      var input      = controller.stream;
+
+      var dueTime = new DateTime.now().subtract(new Duration(seconds : 1));
+      var list    = new List();
+      var error;
+      var isDone  = false;
+      StreamExt.timeOutAt(input, dueTime, sync : true)
+        ..listen(list.add,
+                 onError : (err) => error = err,
+                 onDone  : ()    => isDone = true);
+
+      new Future.delayed(new Duration(milliseconds : 2), () {
+        expect(list.length, equals(0), reason : "output stream should have no value");
 
         expect(error is TimeoutError, equals(true), reason : "output stream should have received a timeout error");
         expect(isDone, equals(true),  reason : "output stream should be completed");
