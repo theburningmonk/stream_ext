@@ -9,7 +9,7 @@ class RepeatTests {
       _repeatNotCloseOnError(0);
       _repeatNotCloseOnError(1);
       _repeatNotCloseOnError(2);
-      _concatCloseOnError();
+      _repeatCloseOnError();
     });
   }
 
@@ -74,7 +74,7 @@ class RepeatTests {
     });
   }
 
-  void _concatCloseOnError() {
+  void _repeatCloseOnError() {
     test('close on error', () {
       var controller = new StreamController.broadcast(sync : true);
       var input      = controller.stream;
