@@ -231,6 +231,16 @@ class StreamExt {
   }
 
   /**
+   * Helper method to provide an easy way to log when new values and errors are received and when the stream is done.
+   */
+  static void log(Stream input, [ String prefix ]) {
+    prefix = prefix == null ? "" : prefix;
+    input.listen((x) => print("($prefix) Value at ${new DateTime.now()} - $x"),
+                 onError : (err) => print("($prefix) Error at ${new DateTime.now()} - $err"),
+                 onDone  : () => print("($prefix) Done at ${new DateTime.now()}"));
+  }
+
+  /**
    * Returns the maximum value as a [Future] when the input stream is done, as determined by the supplied [compare] function which compares the
    * current maximum value against any new value produced by the input stream.
    *
@@ -319,12 +329,12 @@ class StreamExt {
   }
 
   /**
-   *
+   * Allows the continuation of a stream with another regardless of whether the first stream completes gracefully or due to an error.
    *
    * The output stream will complete if:
    *
-   * * both input streams have completed (if stream 2 completes before stream 1 then the concatenated stream is completed when stream 1 completes)
-   * * [closeOnError] flag is set to true and an error is received in the active input stream (stream 1 until it completes, then stream 2)
+   * * both input streams have completed (if stream 2 completes before stream 1 then the output stream is completed when stream 1 completes)
+   * * [closeOnError] flag is set to true and an error is received in the continuation stream
    */
   static Stream onErrorResumeNext(Stream stream1, Stream stream2, { bool closeOnError : false, bool sync : false }) {
     var controller = new StreamController.broadcast(sync : sync);
