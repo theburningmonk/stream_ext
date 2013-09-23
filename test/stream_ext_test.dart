@@ -4,6 +4,7 @@ import 'dart:async';
 import 'package:unittest/unittest.dart';
 import 'package:stream_ext/stream_ext.dart';
 
+part "extensions/amb_test.dart";
 part "extensions/average_test.dart";
 part "extensions/buffer_test.dart";
 part "extensions/combineLatest_test.dart";
@@ -25,6 +26,7 @@ part "extensions/window_test.dart";
 part "extensions/zip_test.dart";
 
 main() {
+  new AmbTests().start();
   new AverageTests().start();
   new BufferTests().start();
   new CombineLatestTests().start();

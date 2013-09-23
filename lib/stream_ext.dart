@@ -45,6 +45,61 @@ class StreamExt {
   }
 
   /**
+   * Propagates values from the stream that reacts first with a value.
+   *
+   * This method will ignore any errors received from either stream until the first value is received. The stream which reacts first with
+   * a value will have its values and errors propagated through the output stream.
+   *
+   * The output stream will complete if:
+   *
+   * * neither stream produced a value before completing
+   * * the propagated stream has completed
+   * * [closeOnError] flag is set to true and an error is received in the propagated stream
+   */
+  static Stream amb(Stream stream1, Stream stream2, { bool closeOnError : false, bool sync : false }) {
+    var controller = new StreamController.broadcast(sync : sync);
+    var onError    = _getOnErrorHandler(controller, closeOnError);
+
+    StreamSubscription subscription1, subscription2;
+    Completer completer1 = new Completer(), completer2 = new Completer();
+    var started = false;
+
+    void tryStart (StreamSubscription subscription, Completer completer,
+                   StreamSubscription otherSubscription, Completer otherCompleter,
+                   value) {
+      if (!started) {
+        started = true;
+        controller.add(value);
+
+        // update the handlers to propagate values and errors on the stream
+        subscription.onData((x) => _tryAdd(controller, x));
+        subscription.onError(onError);
+        subscription.onDone(() {
+          if (!completer.isCompleted) completer.complete();
+          _tryClose(controller);
+        });
+
+        // cancel the subscription to the other unused stream and complete its completer
+        otherSubscription.cancel();
+        if (!otherCompleter.isCompleted) otherCompleter.complete();
+      }
+    }
+
+    subscription1 = stream1.listen((x) => tryStart(subscription1, completer1, subscription2, completer2, x),
+                                   onError : (_) { }, // surpress errors before value
+                                   onDone  : () => completer1.complete());
+    subscription2 = stream2.listen((x) => tryStart(subscription2, completer2, subscription1, completer1, x),
+                                   onError : (_) { }, // surpress errors before value
+                                   onDone  : () => completer2.complete());
+
+    // catch-all in case neither stream produced a value before completing
+    Future.wait([ completer1.future, completer2.future ])
+      .then((_) => _tryClose(controller));
+
+    return controller.stream;
+  }
+
+  /**
    * Returns the average of the values as a [Future] which completes when the input stream is done.
    *
    * This method uses the supplied [map] function to convert each input value into a [num].
