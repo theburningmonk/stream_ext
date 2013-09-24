@@ -21,16 +21,13 @@ void main() {
 
   var stream1   = contr1.stream;
   var stream2   = contr2.stream;
-  var merged    = StreamExt.onErrorResumeNext(stream1, stream2);
+  var resumed   = StreamExt.onErrorResumeNext(stream1, stream2);
 
-  log(prefix, value) => output.children.add(new DivElement()..text = "$prefix - $value");
+  log(msg) => output.children.add(new DivElement()..text = msg);
 
-  stream1.listen((x) => log("stream1", x), onError : (err) => log("stream1", err), onDone : () => log("stream1", "done"));
-  stream2.listen((x) => log("stream2", x), onError : (err) => log("stream2", err), onDone : () => log("stream2", "done"));
-
-  merged.listen((x) => log("resumed stream", x),
-                onError : (err) => log("resumed stream", err),
-                onDone : () => log("resumed stream", "done"));
+  StreamExt.log(stream1, "stream1", log);
+  StreamExt.log(stream2, "stream2", log);
+  StreamExt.log(resumed, "resumed", log);
 
   btn1.onClick.listen((_) => contr1.add("new event"));
   btn2.onClick.listen((_) => contr2.add("new event"));

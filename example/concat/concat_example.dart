@@ -21,16 +21,13 @@ void main() {
 
   var stream1   = contr1.stream;
   var stream2   = contr2.stream;
-  var merged    = StreamExt.concat(stream1, stream2);
+  var concat    = StreamExt.concat(stream1, stream2);
 
-  log(prefix, value) => output.children.add(new DivElement()..text = "$prefix - $value");
+  log(msg) => output.children.add(new DivElement()..text = msg);
 
-  stream1.listen((x) => log("stream1", x), onError : (err) => log("stream1", err), onDone : () => log("stream1", "done"));
-  stream2.listen((x) => log("stream2", x), onError : (err) => log("stream2", err), onDone : () => log("stream2", "done"));
-
-  merged.listen((x) => log("concatenated stream", x),
-                onError : (err) => log("concatenated stream", err),
-                onDone : () => log("concatenated stream", "done"));
+  StreamExt.log(stream1, "stream1", log);
+  StreamExt.log(stream2, "stream2", log);
+  StreamExt.log(concat,  "concatenated", log);
 
   btn1.onClick.listen((_) => contr1.add("new event"));
   btn2.onClick.listen((_) => contr2.add("new event"));

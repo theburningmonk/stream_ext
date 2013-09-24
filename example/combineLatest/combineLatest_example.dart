@@ -23,12 +23,11 @@ void main() {
   var stream2   = contr2.stream;
   var combined  = StreamExt.combineLatest(stream1, stream2, (a, b) => "($a, $b)");
 
-  log(prefix, value) => output.children.add(new DivElement()..text = "$prefix - $value");
+  log(msg) => output.children.add(new DivElement()..text = msg);
 
-  stream1.listen((x) => log("stream1", x), onError : (err) => log("stream1", err), onDone : () => log("stream1", "done"));
-  stream2.listen((x) => log("stream2", x), onError : (err) => log("stream2", err), onDone : () => log("stream2", "done"));
-
-  combined.listen((x) => log("combined", x), onError : (err) => log("combined", err), onDone : () => log("combined", "done"));
+  StreamExt.log(stream1,  "stream1",  log);
+  StreamExt.log(stream2,  "stream2",  log);
+  StreamExt.log(combined, "combined", log);
 
   var idx1 = 0;
   btn1.onClick.listen((_) => contr1.add(idx1++));

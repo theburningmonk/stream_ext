@@ -32,6 +32,5 @@ main() {
     } catch (ex) {
       log("incorrect date format", "expect date in yyyy-MM-dd HH:mm:ss");
     }
-
   });
 }

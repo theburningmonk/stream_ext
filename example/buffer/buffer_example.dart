@@ -16,10 +16,10 @@ void main() {
 
   var buffers   = StreamExt.buffer(input, new Duration(seconds : 3));
 
-  log(prefix, value) => output.children.add(new DivElement()..text = "$prefix - $value");
+  log(msg) => output.children.add(new DivElement()..text = msg);
 
-  input.listen((x) => log("input", x), onError : (err) => log("input", err), onDone : () => log("input", "done"));
-  buffers.listen((x) => log("window", x), onError : (err) => log("window", err), onDone : () => log("window", "done"));
+  StreamExt.log(input, "input", log);
+  StreamExt.log(buffers, "window", log);
 
   var idx = 0;
   btn1.onClick.listen((_) => contrl.add(idx++));
