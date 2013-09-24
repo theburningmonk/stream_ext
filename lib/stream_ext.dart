@@ -6,6 +6,8 @@ part "timeout_error.dart";
 part "tuple.dart";
 
 class StreamExt {
+  static _defaultArg (x, defaultVal) => x == null ? defaultVal : x;
+
   static _identity(x) => x; // the identity function
 
   static _getOnErrorHandler(StreamController controller, closeOnError) {
@@ -288,11 +290,13 @@ class StreamExt {
   /**
    * Helper method to provide an easy way to log when new values and errors are received and when the stream is done.
    */
-  static void log(Stream input, [ String prefix ]) {
-    prefix = prefix == null ? "" : prefix;
-    input.listen((x) => print("($prefix) Value at ${new DateTime.now()} - $x"),
-                 onError : (err) => print("($prefix) Error at ${new DateTime.now()} - $err"),
-                 onDone  : () => print("($prefix) Done at ${new DateTime.now()}"));
+  static void log(Stream input, [ String prefix, void log(Object msg) ]) {
+    prefix = _defaultArg(prefix, "");
+    log    = _defaultArg(log, print);
+
+    input.listen((x) => log("($prefix) Value at ${new DateTime.now()} - $x"),
+                 onError : (err) => log("($prefix) Error at ${new DateTime.now()} - $err"),
+                 onDone  : () => log("($prefix) Done at ${new DateTime.now()}"));
   }
 
   /**
