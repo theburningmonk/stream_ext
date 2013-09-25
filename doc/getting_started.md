@@ -2,6 +2,25 @@
 
 Learn about the extension functions for working with `Stream` type with `stream_ext`.
 
+### amb
+
+The `StreamExt.amb` method propagates values from the stream that reacts first with a value.
+
+This method will ignore any errors received from either stream until the first value is received.
+The stream which reacts first with a value will have its values and errors propagated through the output stream.
+
+The output stream will complete if:
+* neither stream produced a value before completing
+* the propagated stream has completed
+* **closeOnError** flag is set to true and an error is received in the propagated stream
+
+Example:
+
+    var stream1 = new Stream.periodic(new Duration(seconds : 1), (n) => n);
+    var stream2 = new Stream.periodic(new Duration(seconds : 2), (n) => n);
+    var amb		= StreamExt.amb(stream1, stream2);
+
+
 ### average
 
 The `StreamExt.average` method returns the average of the values as a `Future` which completes when the input stream is done.
@@ -126,6 +145,22 @@ Example
     StreamExt.min(input, (a, b) => a.compareTo(b)).then(print);
 
 
+### onErrorResumeNext
+
+The `StreamExt.onErrorResumeNext` method allows the continuation of a stream with another regardless of whether the first stream completes gracefully or due to an error.
+
+The output stream will complete if:
+* both input streams have completed (if stream 2 completes before stream 1 then the output stream is completed when stream 1 completes)
+* **closeOnError** flag is set to true and an error is received in the continuation stream
+
+Example:
+
+    var stream1 = new StreamController.broadcast().stream;
+    var stream2 = new StreamController.broadcast().stream;
+
+    var resumed	= StreamExt.onErrorResumeNext(stream1, stream2);
+
+
 ### repeat
 
 The `StreamExt.repeat` method allows you to repeat the input stream for the specified number of times.
@@ -201,6 +236,21 @@ Example
     StreamExt.sum(input).then(print);
 
 
+### switchFrom
+
+The `StreamExt.switchFrom` method transforms a stream of streams into a stream producing values only from the most recent stream.
+
+The output stream will complete if:
+* the input stream has completed and the last stream has completed
+* **closeOnError** flag is set to true and an error is received in the active stream
+
+Example
+
+    var input     = new StreamController.broadcast().stream;
+    var switched  = StreamExt.switchFrom(input);
+    input.add(new Stream.periodic(new Duration(seconds : 1)));
+
+
 ### throttle
 
 The `StreamExt.throttle` method creates a new stream based on values produced by the specified input, upon forwarding a value from the input stream it'll ignore any subsequent values produced by the input stream until the the flow of new values has paused for the specified duration, after which the last value produced by the input stream is then delivered.
@@ -213,6 +263,36 @@ Example
 
     var input     = new StreamController.broadcast().stream;
     var throttled = StreamExt.throttle(input, new Duration(seconds : 1));
+
+
+### timeOut
+
+The `StreamExt.timeOut` method allows you to terminate a stream with a **TimeoutError** if the specified **duration** between values elapsed.
+
+The output stream will complete if:
+* the input stream has completed
+* the specified **duration** between input values has elpased
+* **closeOnError** flag is set to true and an error is received
+
+Example
+
+    var input     = new StreamController.broadcast().stream;
+    var timedOut  = StreamExt.timeOut(input, new Duration(seconds : 3));
+
+
+### timeOutAt
+
+The `StreamExt.timeOutAt` method allows you to terminate a stream with a **TimeoutError** at the specified **dueTime**.
+
+The output stream will complete if:
+* the input stream has completed
+* the specified **dueTime** has elapsed
+* **closeOnError** flag is set to true and an error is received
+
+Example
+
+    var input     = new StreamController.broadcast().stream;
+    var timedOut  = StreamExt.timeOutAt(input, new DateTime.now().add(new Duration(seconds : 10));
 
 
 ### window
