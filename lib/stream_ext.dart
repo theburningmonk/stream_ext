@@ -726,7 +726,7 @@ class StreamExt {
   }
 
   /**
-   * Allows you to terminate a stream with a TimeoutError if the specified [duration] between values elapsed.
+   * Allows you to terminate a stream with a [TimeoutError] if the specified [duration] between values elapsed.
    *
    * The output stream will complete if:
    *
@@ -766,7 +766,7 @@ class StreamExt {
   }
 
   /**
-   * Allows you to terminate a stream with a TimeoutError at the specified [dueTime].
+   * Allows you to terminate a stream with a [TimeoutError] at the specified [dueTime].
    *
    * The output stream will complete if:
    *
