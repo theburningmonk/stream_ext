@@ -636,6 +636,43 @@ class StreamExt {
   }
 
   /**
+   * Transforms a stream of streams into a stream producing values only from the most recent stream.
+   *
+   * The output stream will complete if:
+   *
+   * * the input stream has completed and the last stream has completed
+   * * [closeOnError] flag is set to true and an error is received in the active stream
+   */
+  static Stream switchFrom(Stream<Stream> inputs, { bool closeOnError : false, bool sync : false }) {
+    var controller = new StreamController.broadcast(sync : sync);
+    var onError    = _getOnErrorHandler(controller, closeOnError);
+
+    StreamSubscription current;
+    var inputFinished = false;
+
+    void handleNewInput(Stream stream) {
+      if (current != null) current.cancel();
+
+      current = stream.listen((x) => _tryAdd(controller, x),
+                              onError : onError,
+                              onDone  : () {
+                                current.cancel();
+                                current = null;
+
+                                if (inputFinished) _tryClose(controller);
+                              });
+    }
+
+    inputs.listen(handleNewInput,
+                  onDone : () {
+                    inputFinished = true;
+                    if (current == null) _tryClose(controller);
+                  });
+
+    return controller.stream;
+  }
+
+  /**
    * Creates a new stream who stops the flow of values produced by the input stream until no new value has been produced by the input stream after the specified duration.
    *
    * The throttled stream will complete if:
