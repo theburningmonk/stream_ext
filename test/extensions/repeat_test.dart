@@ -9,7 +9,7 @@ class RepeatTests {
       _repeatNotCloseOnError(0);
       _repeatNotCloseOnError(1);
       _repeatNotCloseOnError(2);
-      _concatCloseOnError();
+      _repeatCloseOnError();
     });
   }
 
@@ -31,9 +31,9 @@ class RepeatTests {
       controller.add(2);
       controller.close()
         // allow some time for the reply events to go through due to granularity of the Duration type
-        .then((_) => new Future.delayed(new Duration(milliseconds : 100 * repeatCount)))
+        .then((_) => new Future.delayed(new Duration(milliseconds : 150 * repeatCount)))
         .then((_) {
-            expect(list.length, equals(3 * (1 + repeatCount)), reason : "repeated stream should contain ${3 * (1 + repeatCount)} values");
+            expect(list.length, equals(3 * (1 + repeatCount)), reason : "repeated [$repeatCount] stream should contain ${3 * (1 + repeatCount)} values");
             expect(list, equals(new List.generate(1 + repeatCount, (i) => i).expand((_) => [ 0, 1, 2 ])),
                    reason : "repeated stream should contain ${1 + repeatCount} sets of [ 0, 1, 2 ]");
 
@@ -62,9 +62,9 @@ class RepeatTests {
       controller.add(2);
       controller.close()
         // allow some time for the reply events to go through due to granularity of the Duration type
-        .then((_) => new Future.delayed(new Duration(milliseconds : 100 * repeatCount)))
+        .then((_) => new Future.delayed(new Duration(milliseconds : 150 * repeatCount)))
         .then((_) {
-          expect(list.length, equals(3 * (1 + repeatCount)), reason : "repeated stream should contain ${3 * (1 + repeatCount)} values");
+          expect(list.length, equals(3 * (1 + repeatCount)), reason : "repeated [$repeatCount] stream should contain ${3 * (1 + repeatCount)} values");
           expect(list, equals(new List.generate(1 + repeatCount, (i) => i).expand((_) => [ 0, 1, 2 ])),
                  reason : "repeated stream should contain ${1 + repeatCount} sets of [ 0, 1, 2 ]");
 
@@ -74,7 +74,7 @@ class RepeatTests {
     });
   }
 
-  void _concatCloseOnError() {
+  void _repeatCloseOnError() {
     test('close on error', () {
       var controller = new StreamController.broadcast(sync : true);
       var input      = controller.stream;

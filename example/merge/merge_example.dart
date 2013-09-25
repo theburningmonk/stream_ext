@@ -28,13 +28,12 @@ void main() {
   var stream3   = contr3.stream;
   var merged    = StreamExt.merge(StreamExt.merge(stream1, stream2), stream3);
 
-  log(prefix, value) => output.children.add(new DivElement()..text = "$prefix - $value");
+  log(msg) => output.children.add(new DivElement()..text = msg);
 
-  stream1.listen((x) => log("stream1", x), onError : (err) => log("stream1", err), onDone : () => log("stream1", "done"));
-  stream2.listen((x) => log("stream2", x), onError : (err) => log("stream2", err), onDone : () => log("stream2", "done"));
-  stream3.listen((x) => log("stream3", x), onError : (err) => log("stream3", err), onDone : () => log("stream3", "done"));
-
-  merged.listen((x) => log("merged", x), onError : (err) => log("merged", err), onDone : () => log("merged", "done"));
+  StreamExt.log(stream1, "stream1", log);
+  StreamExt.log(stream2, "stream2", log);
+  StreamExt.log(stream3, "stream3", log);
+  StreamExt.log(merged,  "merged",  log);
 
   btn1.onClick.listen((_) => contr1.add("new event"));
   btn2.onClick.listen((_) => contr2.add("new event"));

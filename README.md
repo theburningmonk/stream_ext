@@ -15,7 +15,6 @@ To get up to speed with **stream_ext**:
 * the [wiki](https://github.com/theburningmonk/stream_ext/wiki) also contains details (including marble diagrams) for each of the functions
 * the [example](https://github.com/theburningmonk/stream_ext/tree/master/example) directory also contains more useful/meaningful usages for each of the functions
 
-
 ### Feedbacks
 
 I would love to know what you think of this project, and where it might be improved. Please feel free to get in touch if you have any questions about this project.

@@ -1,4 +1,4 @@
-library combineLatest_example;
+library onErrorResumeNext_example;
 
 import 'dart:html';
 import 'dart:async';
@@ -21,19 +21,16 @@ void main() {
 
   var stream1   = contr1.stream;
   var stream2   = contr2.stream;
-  var combined  = StreamExt.combineLatest(stream1, stream2, (a, b) => "($a, $b)");
+  var resumed   = StreamExt.onErrorResumeNext(stream1, stream2);
 
   log(msg) => output.children.add(new DivElement()..text = msg);
 
-  StreamExt.log(stream1,  "stream1",  log);
-  StreamExt.log(stream2,  "stream2",  log);
-  StreamExt.log(combined, "combined", log);
+  StreamExt.log(stream1, "stream1", log);
+  StreamExt.log(stream2, "stream2", log);
+  StreamExt.log(resumed, "resumed", log);
 
-  var idx1 = 0;
-  btn1.onClick.listen((_) => contr1.add(idx1++));
-
-  var idx2 = 0;
-  btn2.onClick.listen((_) => contr2.add(idx2++));
+  btn1.onClick.listen((_) => contr1.add("new event"));
+  btn2.onClick.listen((_) => contr2.add("new event"));
 
   btnErr1.onClick.listen((_) => contr1.addError("new error"));
   btnErr2.onClick.listen((_) => contr2.addError("new error"));

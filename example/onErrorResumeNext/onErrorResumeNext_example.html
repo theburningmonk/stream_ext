@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <title>Demo - OnErrorResumeNext</title>
+  </head>
+
+  <body>
+
+    <h1>OnErrorResumeNext Demo</h1>
+
+    <p>Use the <strong>StreamExt.onErrorResumeNext</strong> function to concatenate events from two source treams after the first stream errors or finishes.</p>
+
+    Stream 1 : <button id="btn_1">Event</button> <button id="btn_err_1">Error</button> <button id="btn_done_1">Done</button>
+    <br/>
+    Stream 2 : <button id="btn_2">Event</button> <button id="btn_err_2">Error</button> <button id="btn_done_2">Done</button>
+    <br/>
+
+    Output : <ol id="output"></ol>
+
+    <script type="application/dart" src="onErrorResumeNext_example.dart"></script>
+    <script src="packages/browser/dart.js"></script>
+
+  </body>
+</html>

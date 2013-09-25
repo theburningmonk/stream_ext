@@ -2,9 +2,12 @@ library stream_ext;
 
 import 'dart:async';
 
+part "timeout_error.dart";
 part "tuple.dart";
 
 class StreamExt {
+  static _defaultArg (x, defaultVal) => x == null ? defaultVal : x;
+
   static _identity(x) => x; // the identity function
 
   static _getOnErrorHandler(StreamController controller, closeOnError) {
@@ -22,6 +25,10 @@ class StreamExt {
               };
   }
 
+  static _tryAddError(StreamController controller, error) {
+    if (!controller.isClosed) controller.addError(error);
+  }
+
   static _tryClose(StreamController controller) {
     if (!controller.isClosed) controller.close();
   }
@@ -37,6 +44,61 @@ class StreamExt {
     catch (ex) {
       onError(ex);
     }
+  }
+
+  /**
+   * Propagates values from the stream that reacts first with a value.
+   *
+   * This method will ignore any errors received from either stream until the first value is received. The stream which reacts first with
+   * a value will have its values and errors propagated through the output stream.
+   *
+   * The output stream will complete if:
+   *
+   * * neither stream produced a value before completing
+   * * the propagated stream has completed
+   * * [closeOnError] flag is set to true and an error is received in the propagated stream
+   */
+  static Stream amb(Stream stream1, Stream stream2, { bool closeOnError : false, bool sync : false }) {
+    var controller = new StreamController.broadcast(sync : sync);
+    var onError    = _getOnErrorHandler(controller, closeOnError);
+
+    StreamSubscription subscription1, subscription2;
+    Completer completer1 = new Completer(), completer2 = new Completer();
+    var started = false;
+
+    void tryStart (StreamSubscription subscription, Completer completer,
+                   StreamSubscription otherSubscription, Completer otherCompleter,
+                   value) {
+      if (!started) {
+        started = true;
+        controller.add(value);
+
+        // update the handlers to propagate values and errors on the stream
+        subscription.onData((x) => _tryAdd(controller, x));
+        subscription.onError(onError);
+        subscription.onDone(() {
+          if (!completer.isCompleted) completer.complete();
+          _tryClose(controller);
+        });
+
+        // cancel the subscription to the other unused stream and complete its completer
+        otherSubscription.cancel();
+        if (!otherCompleter.isCompleted) otherCompleter.complete();
+      }
+    }
+
+    subscription1 = stream1.listen((x) => tryStart(subscription1, completer1, subscription2, completer2, x),
+                                   onError : (_) { }, // surpress errors before value
+                                   onDone  : () => completer1.complete());
+    subscription2 = stream2.listen((x) => tryStart(subscription2, completer2, subscription1, completer1, x),
+                                   onError : (_) { }, // surpress errors before value
+                                   onDone  : () => completer2.complete());
+
+    // catch-all in case neither stream produced a value before completing
+    Future.wait([ completer1.future, completer2.future ])
+      .then((_) => _tryClose(controller));
+
+    return controller.stream;
   }
 
   /**
@@ -176,7 +238,7 @@ class StreamExt {
       if (isStream1 == !completer1.isCompleted) {
         _tryAdd(controller, x);
       }
-    };
+    }
 
     stream1.listen((x) => handleNewValue(x, true),
                    onError : onError,
@@ -223,6 +285,18 @@ class StreamExt {
                  onDone  : () => delayCall(() => _tryClose(controller)));
 
     return controller.stream;
+  }
+
+  /**
+   * Helper method to provide an easy way to log when new values and errors are received and when the stream is done.
+   */
+  static void log(Stream input, [ String prefix, void log(Object msg) ]) {
+    prefix = _defaultArg(prefix, "");
+    log    = _defaultArg(log, print);
+
+    input.listen((x) => log("($prefix) Value at ${new DateTime.now()} - $x"),
+                 onError : (err) => log("($prefix) Error at ${new DateTime.now()} - $err"),
+                 onDone  : () => log("($prefix) Done at ${new DateTime.now()}"));
   }
 
   /**
@@ -311,6 +385,58 @@ class StreamExt {
                  });
 
     return completer.future;
+  }
+
+  /**
+   * Allows the continuation of a stream with another regardless of whether the first stream completes gracefully or due to an error.
+   *
+   * The output stream will complete if:
+   *
+   * * both input streams have completed (if stream 2 completes before stream 1 then the output stream is completed when stream 1 completes)
+   * * [closeOnError] flag is set to true and an error is received in the continuation stream
+   */
+  static Stream onErrorResumeNext(Stream stream1, Stream stream2, { bool closeOnError : false, bool sync : false }) {
+    var controller = new StreamController.broadcast(sync : sync);
+    var onError    = _getOnErrorHandler(controller, closeOnError);
+    var completer1 = new Completer();
+    var completer2 = new Completer();
+
+    // note : this looks somewhat convoluted and unnecessary, but the reason to subscribe to both input streams and use
+    // another bool flag to indicate if we're handling value from stream 1 is to help us more gracefully handle the case
+    // when the second stream completes before the first so that when the first stream completes it should actually
+    // complete theoutput stream rather than attempt to subscribed to the second stream at that point
+    void handleNewValue (x, isStream1) {
+      if (isStream1 == !completer1.isCompleted) {
+        _tryAdd(controller, x);
+      }
+    }
+
+    void resume () {
+      if (!completer1.isCompleted) completer1.complete();
+
+      // close the output stream eagerly if stream 2 had already completed by now
+      if (completer2.isCompleted) _tryClose(controller);
+    }
+
+    stream1.listen((x) => handleNewValue(x, true),
+                   onError : (_) => resume(),
+                   onDone  : resume);
+    stream2.listen((x) => handleNewValue(x, false),
+                   onError : (err) {
+                     if (completer1.isCompleted) onError(err);
+                   },
+                   onDone  : () {
+                     completer2.complete();
+
+                     // close the output stream eagerly if stream 1 had already completed by now
+                     if (completer1.isCompleted) _tryClose(controller);
+                   });
+
+    Future
+      .wait([ completer1.future, completer2.future ])
+      .then((_) => _tryClose(controller));
+
+    return controller.stream;
   }
 
   /**
@@ -510,6 +636,43 @@ class StreamExt {
   }
 
   /**
+   * Transforms a stream of streams into a stream producing values only from the most recent stream.
+   *
+   * The output stream will complete if:
+   *
+   * * the input stream has completed and the last stream has completed
+   * * [closeOnError] flag is set to true and an error is received in the active stream
+   */
+  static Stream switchFrom(Stream<Stream> inputs, { bool closeOnError : false, bool sync : false }) {
+    var controller = new StreamController.broadcast(sync : sync);
+    var onError    = _getOnErrorHandler(controller, closeOnError);
+
+    StreamSubscription current;
+    var inputFinished = false;
+
+    void handleNewInput(Stream stream) {
+      if (current != null) current.cancel();
+
+      current = stream.listen((x) => _tryAdd(controller, x),
+                              onError : onError,
+                              onDone  : () {
+                                current.cancel();
+                                current = null;
+
+                                if (inputFinished) _tryClose(controller);
+                              });
+    }
+
+    inputs.listen(handleNewInput,
+                  onDone : () {
+                    inputFinished = true;
+                    if (current == null) _tryClose(controller);
+                  });
+
+    return controller.stream;
+  }
+
+  /**
    * Creates a new stream who stops the flow of values produced by the input stream until no new value has been produced by the input stream after the specified duration.
    *
    * The throttled stream will complete if:
@@ -558,6 +721,72 @@ class StreamExt {
                     }
                     _tryClose(controller);
                   });
+
+    return controller.stream;
+  }
+
+  /**
+   * Allows you to terminate a stream with a [TimeoutError] if the specified [duration] between values elapsed.
+   *
+   * The output stream will complete if:
+   *
+   * * the input stream has completed
+   * * the specified [duration] between input values has elpased
+   * * [closeOnError] flag is set to true and an error is received
+   */
+  static Stream timeOut(Stream input, Duration duration, { bool closeOnError : false, bool sync : false }) {
+    var controller = new StreamController.broadcast(sync : sync);
+    var onError    = _getOnErrorHandler(controller, closeOnError);
+
+    DateTime lastValueTimestamp;
+    void startTimer() {
+      new Timer(duration, () {
+        if (lastValueTimestamp == null ||
+          new DateTime.now().difference(lastValueTimestamp) >= duration) {
+          _tryAddError(controller, new TimeoutError(duration));
+          _tryClose(controller);
+        }
+      });
+    }
+
+    void handleNewValue(x) {
+      _tryAdd(controller, x);
+      lastValueTimestamp = new DateTime.now();
+
+      startTimer();
+    }
+
+    startTimer();
+
+    input.listen(handleNewValue,
+                 onError : onError,
+                 onDone  : () => _tryClose(controller));
+
+    return controller.stream;
+  }
+
+  /**
+   * Allows you to terminate a stream with a [TimeoutError] at the specified [dueTime].
+   *
+   * The output stream will complete if:
+   *
+   * * the input stream has completed
+   * * the specified [dueTime] has elapsed
+   * * [closeOnError] flag is set to true and an error is received
+   */
+  static Stream timeOutAt(Stream input, DateTime dueTime, { bool closeOnError : false, bool sync : false }) {
+    var controller = new StreamController.broadcast(sync : sync);
+    var onError    = _getOnErrorHandler(controller, closeOnError);
+    var duration   = dueTime.difference(new DateTime.now());
+
+    new Timer(duration, () {
+      _tryAddError(controller, new TimeoutError(duration));
+      _tryClose(controller);
+    });
+
+    input.listen((x) => _tryAdd(controller, x),
+                 onError : onError,
+                 onDone  : () => _tryClose(controller));
 
     return controller.stream;
   }
