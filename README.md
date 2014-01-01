@@ -18,3 +18,7 @@ To get up to speed with **stream_ext**:
 ### Feedbacks
 
 I would love to know what you think of this project, and where it might be improved. Please feel free to get in touch if you have any questions about this project.
+
+
+[![Bitdeli Badge](https://d2weczhvl823v0.cloudfront.net/theburningmonk/stream_ext/trend.png)](https://bitdeli.com/free "Bitdeli Badge")
+
