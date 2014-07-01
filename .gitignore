@@ -5,6 +5,7 @@ packages/
 *.js_
 *.js.deps
 *.js.map
+*.lock
 
 # files and directories dropped by other development environments
 .project      // Eclipse

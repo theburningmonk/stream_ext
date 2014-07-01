@@ -281,8 +281,8 @@ class StreamExt {
     delayCall(f, [ x ]) => x == null ? new Timer(duration, f) : new Timer(duration, () => f(x));
 
     input.listen((x) => delayCall(() => _tryAdd(controller, x)),
-                 onError : onError,
-                 onDone  : () => delayCall(() => _tryClose(controller)));
+                 onError : (ex) => delayCall(onError, ex),
+                 onDone  : () => delayCall(_tryClose, controller));
 
     return controller.stream;
   }
@@ -582,7 +582,7 @@ class StreamExt {
     var buffer = new List<_Tuple>();
     var addValue = (x) => buffer.add(new _Tuple(x, false));
     var onError  = (x) => buffer.add(new _Tuple(x, true));
-    
+
     controller
       .addStream(new Stream.fromIterable(values))
       .then((_) {
@@ -590,14 +590,14 @@ class StreamExt {
         // from the input stream will be send directly through the controller
         addValue = (x) => _tryAdd(controller, x);
         onError  = _getOnErrorHandler(controller, closeOnError);
-        
+
         buffer.forEach((tuple) {
           var push = tuple.item2 ? onError : addValue;
           push(tuple.item1);
         });
         buffer.clear();
       });
-    
+
     input.listen(addValue,
                  onError : onError,
                  onDone  : () => _tryClose(controller));
