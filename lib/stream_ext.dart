@@ -576,28 +576,29 @@ class StreamExt {
    * * [closeOnError] flag is set to true and an error is received
    */
   static Stream startWith(Stream input, Iterable values, { bool closeOnError : false, bool sync : false }) {
-    // placeholder for a function that'll be reponsible for adding the data to the StreamController once it's been constructed
-    var addValues;
+    var controller = new StreamController.broadcast(sync : sync);
 
-    // note : add the specified values when the stream is subscribed otherwise the data will never be received as they're added
-    // before any listeners had started to listen to the stream
-    // note : since we can't reference the 'controller' variable in the 'onListen' constructor param and there's no way to set
-    // it outside of the constructor, hence the use of the delegate 'addValues' which is invoked only when the output stream
-    // is listened to
-    var controller = new StreamController.broadcast(onListen : () => addValues(), sync : sync);
-    var onError    = _getOnErrorHandler(controller, closeOnError);
-
-    // now that we can refer to the 'controller' variable, initialize the 'addValues' delegate to add all the supplied values
-    // to the stream controller as soon as its output stream is subscribed
-    addValues = () {
-      try {
-        values.forEach((x) => _tryAdd(controller, x));
-      } catch (e) {
-        onError(e);
-      }
-    };
-
-    input.listen((x) => _tryAdd(controller, x),
+    // until the initial values are sent, add the values received from the input stream into a buffer
+    var buffer = new List<_Tuple>();
+    var addValue = (x) => buffer.add(new _Tuple(x, false));
+    var onError  = (x) => buffer.add(new _Tuple(x, true));
+    
+    controller
+      .addStream(new Stream.fromIterable(values))
+      .then((_) {
+        // now that initial values are sent, send the values we have in the buffer and any future values
+        // from the input stream will be send directly through the controller
+        addValue = (x) => _tryAdd(controller, x);
+        onError  = _getOnErrorHandler(controller, closeOnError);
+        
+        buffer.forEach((tuple) {
+          var push = tuple.item2 ? onError : addValue;
+          push(tuple.item1);
+        });
+        buffer.clear();
+      });
+    
+    input.listen(addValue,
                  onError : onError,
                  onDone  : () => _tryClose(controller));
 
