@@ -33,7 +33,7 @@ class RepeatTests {
       Future future =
         controller
           .close()
-          .then((_) => new Future.delayed(new Duration(milliseconds : 5 * (repeatCount + 1)), () {
+          .then((_) => new Future.delayed(new Duration(milliseconds : 2), () {
             expect(list.length, equals(3 * (1 + repeatCount)), reason : "repeated [$repeatCount] stream should contain ${3 * (1 + repeatCount)} values");
             expect(list,
                    equals(new List.generate(1 + repeatCount, (i) => i).expand((_) => [ 0, 1, 2 ])),
@@ -71,7 +71,7 @@ class RepeatTests {
       Future future =
           controller
             .close()
-            .then((_) => new Future.delayed(new Duration(milliseconds : 2 * (repeatCount + 1)), () {
+            .then((_) => new Future.delayed(new Duration(milliseconds : 2), () {
               expect(list.length, equals(3 * (1 + repeatCount)), reason : "repeated [$repeatCount] stream should contain ${3 * (1 + repeatCount)} values");
               expect(list,
                      equals(new List.generate(1 + repeatCount, (i) => i).expand((_) => [ 0, 1, 2 ])),
