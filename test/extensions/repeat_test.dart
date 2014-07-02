@@ -29,8 +29,8 @@ class RepeatTests {
       controller.add(0);
       controller.add(1);
       controller.add(2);
-      
-      Future future = new Future.delayed(new Duration(milliseconds : 150 * repeatCount)).then((_) => controller.close());
+
+      Future future = controller.close().then((_) => new Future.delayed(new Duration(milliseconds : 2)));
       future.then((_) {
             expect(list.length, equals(3 * (1 + repeatCount)), reason : "repeated [$repeatCount] stream should contain ${3 * (1 + repeatCount)} values");
             expect(list, equals(new List.generate(1 + repeatCount, (i) => i).expand((_) => [ 0, 1, 2 ])),
@@ -39,7 +39,7 @@ class RepeatTests {
             expect(hasErr, equals(false), reason : "repeated stream should not have received error");
             expect(isDone, equals(true),  reason : "repeated stream should be completed");
         });
-      
+
       expect(future, completes);
     });
   }
@@ -61,8 +61,8 @@ class RepeatTests {
       controller.add(1);
       controller.addError("failed");
       controller.add(2);
-      
-      Future future = new Future.delayed(new Duration(milliseconds : 150 * repeatCount)).then((_) => controller.close());
+
+      Future future = controller.close().then((_) => new Future.delayed(new Duration(milliseconds : 2)));
       future.then((_) {
           expect(list.length, equals(3 * (1 + repeatCount)), reason : "repeated [$repeatCount] stream should contain ${3 * (1 + repeatCount)} values");
           expect(list, equals(new List.generate(1 + repeatCount, (i) => i).expand((_) => [ 0, 1, 2 ])),
@@ -71,7 +71,7 @@ class RepeatTests {
           expect(errors, equals([ "failed" ]), reason : "repeated stream should have received error only once (not repeated)");
           expect(isDone, equals(true),  reason : "repeated stream should be completed");
         });
-      
+
       expect(future, completes);
     });
   }
@@ -93,17 +93,12 @@ class RepeatTests {
       controller.addError("failed");
       controller.add(1);
       controller.add(2);
-      
-      Future future = controller.close();
-      future.then((_) {
-          expect(list.length, equals(1),      reason : "repeated stream should have only one event before the error");
-          expect(list,        equals([ 0 ] ), reason : "repeated stream should contain the value 0");
 
-          expect(error,  equals("failed"), reason : "repeated stream should have received error");
-          expect(isDone, equals(true),     reason : "repeated stream should be completed");
-        });
-      
-      expect(future, completes);
+      expect(list.length, equals(1),      reason : "repeated stream should have only one event before the error");
+      expect(list,        equals([ 0 ] ), reason : "repeated stream should contain the value 0");
+
+      expect(error,  equals("failed"), reason : "repeated stream should have received error");
+      expect(isDone, equals(true),     reason : "repeated stream should be completed");
     });
   }
 }
