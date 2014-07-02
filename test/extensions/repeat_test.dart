@@ -30,7 +30,7 @@ class RepeatTests {
       controller.add(1);
       controller.add(2);
 
-      Future future = controller.close().then((_) => new Future.delayed(new Duration(milliseconds : 2)));
+      Future future = controller.close().then((_) => new Future.delayed(new Duration(milliseconds : 2 * repeatCount)));
       future.then((_) {
             expect(list.length, equals(3 * (1 + repeatCount)), reason : "repeated [$repeatCount] stream should contain ${3 * (1 + repeatCount)} values");
             expect(list, equals(new List.generate(1 + repeatCount, (i) => i).expand((_) => [ 0, 1, 2 ])),
@@ -62,7 +62,7 @@ class RepeatTests {
       controller.addError("failed");
       controller.add(2);
 
-      Future future = controller.close().then((_) => new Future.delayed(new Duration(milliseconds : 2)));
+      Future future = controller.close().then((_) => new Future.delayed(new Duration(milliseconds : 2 * repeatCount)));
       future.then((_) {
           expect(list.length, equals(3 * (1 + repeatCount)), reason : "repeated [$repeatCount] stream should contain ${3 * (1 + repeatCount)} values");
           expect(list, equals(new List.generate(1 + repeatCount, (i) => i).expand((_) => [ 0, 1, 2 ])),
