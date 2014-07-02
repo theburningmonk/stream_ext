@@ -30,14 +30,20 @@ class RepeatTests {
       controller.add(1);
       controller.add(2);
 
-      Future future = controller.close().then((_) => new Future.delayed(new Duration(milliseconds : 5 * (repeatCount + 1))));
-      future.then((_) {
+      Future future =
+        controller
+          .close()
+          .then((_) => new Future.delayed(new Duration(milliseconds : 5 * (repeatCount + 1)), () {
             expect(list.length, equals(3 * (1 + repeatCount)), reason : "repeated [$repeatCount] stream should contain ${3 * (1 + repeatCount)} values");
-            expect(list, equals(new List.generate(1 + repeatCount, (i) => i).expand((_) => [ 0, 1, 2 ])),
+            expect(list,
+                   equals(new List.generate(1 + repeatCount, (i) => i).expand((_) => [ 0, 1, 2 ])),
                    reason : "repeated stream should contain ${1 + repeatCount} sets of [ 0, 1, 2 ]");
 
             expect(hasErr, equals(false), reason : "repeated stream should not have received error");
             expect(isDone, equals(true),  reason : "repeated stream should be completed");
+          }));
+      future.then((_) {
+
         });
 
       expect(future, completes);
@@ -62,15 +68,18 @@ class RepeatTests {
       controller.addError("failed");
       controller.add(2);
 
-      Future future = controller.close().then((_) => new Future.delayed(new Duration(milliseconds : 5 * (repeatCount + 1))));
-      future.then((_) {
-          expect(list.length, equals(3 * (1 + repeatCount)), reason : "repeated [$repeatCount] stream should contain ${3 * (1 + repeatCount)} values");
-          expect(list, equals(new List.generate(1 + repeatCount, (i) => i).expand((_) => [ 0, 1, 2 ])),
-                 reason : "repeated stream should contain ${1 + repeatCount} sets of [ 0, 1, 2 ]");
+      Future future =
+          controller
+            .close()
+            .then((_) => new Future.delayed(new Duration(milliseconds : 2 * (repeatCount + 1)), () {
+              expect(list.length, equals(3 * (1 + repeatCount)), reason : "repeated [$repeatCount] stream should contain ${3 * (1 + repeatCount)} values");
+              expect(list,
+                     equals(new List.generate(1 + repeatCount, (i) => i).expand((_) => [ 0, 1, 2 ])),
+                     reason : "repeated stream should contain ${1 + repeatCount} sets of [ 0, 1, 2 ]");
 
-          expect(errors, equals([ "failed" ]), reason : "repeated stream should have received error only once (not repeated)");
-          expect(isDone, equals(true),  reason : "repeated stream should be completed");
-        });
+              expect(errors, equals([ "failed" ]), reason : "repeated stream should have received error only once (not repeated)");
+              expect(isDone, equals(true),  reason : "repeated stream should be completed");
+            }));
 
       expect(future, completes);
     });
