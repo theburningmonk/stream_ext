@@ -24,7 +24,7 @@ class DelayTests {
 
       // since events are delayed by 1 milliseconds, give it some buffer space and check after 5 ms if
       // all the delayed events have been processed
-      Future future = new Future.delayed(new Duration(milliseconds : 5), () {
+      Future future = new Future.delayed(new Duration(milliseconds : 10), () {
         expect(list.length, equals(3), reason : "delayed stream should have all three events");
 
         for (var i = 0; i <= 2; i++) {
