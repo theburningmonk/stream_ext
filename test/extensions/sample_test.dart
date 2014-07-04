@@ -10,7 +10,7 @@ class SampleTests {
     });
   }
 
-  void _sampleWithNoErrors() {
+  void _sampleWithNoErrors() =>
     test("no errors", () {
       var controller = new StreamController.broadcast(sync : true);
       var input      = controller.stream;
@@ -28,21 +28,22 @@ class SampleTests {
       controller.add(2);
       controller.add(3);
 
-      new Timer(new Duration(milliseconds : 1), () {
-        controller.add(4);
-        controller.close()
-          .then((_) {
-            expect(list.length, equals(2), reason : "sampled stream should have only two events");
-            expect(list, equals([ 3, 4 ]), reason : "sampled stream should contain values 3 and 4");
+      return new Future
+        .delayed(new Duration(milliseconds : 1))
+        .then((_) {
+          controller.add(4);
+          return controller.close();
+        })
+        .then((_) {
+          expect(list.length, equals(2), reason : "sampled stream should have only two events");
+          expect(list, equals([ 3, 4 ]), reason : "sampled stream should contain values 3 and 4");
 
-            expect(hasErr, equals(false),  reason : "sampled stream should not have received error");
-            expect(isDone, equals(true),   reason : "sampled stream should be completed");
-          });
-      });
+          expect(hasErr, equals(false),  reason : "sampled stream should not have received error");
+          expect(isDone, equals(true),   reason : "sampled stream should be completed");
+        });
     });
-  }
 
-  void _sampleIgnoresEmptyTimeWindows() {
+  void _sampleIgnoresEmptyTimeWindows() =>
     test("no errors", () {
       var controller = new StreamController.broadcast(sync : true);
       var input      = controller.stream;
@@ -60,20 +61,19 @@ class SampleTests {
       controller.add(2);
       controller.add(3);
 
-      new Timer(new Duration(milliseconds : 2), () {
-        controller.close()
-          .then((_) {
-            expect(list.length, equals(1), reason : "sampled stream should have only one event");
-            expect(list, equals([ 3 ]),    reason : "sampled stream should contain value 3");
+      return new Future
+        .delayed(new Duration(milliseconds : 2))
+        .then((_) => controller.close())
+        .then((_) {
+          expect(list.length, equals(1), reason : "sampled stream should have only one event");
+          expect(list, equals([ 3 ]),    reason : "sampled stream should contain value 3");
 
-            expect(hasErr, equals(false),  reason : "sampled stream should not have received error");
-            expect(isDone, equals(true),   reason : "sampled stream should be completed");
-          });
-      });
+          expect(hasErr, equals(false),  reason : "sampled stream should not have received error");
+          expect(isDone, equals(true),   reason : "sampled stream should be completed");
+        });
     });
-  }
 
-  void _sampleNotCloseOnError() {
+  void _sampleNotCloseOnError() =>
     test("not close on error", () {
       var controller = new StreamController.broadcast(sync : true);
       var input      = controller.stream;
@@ -92,21 +92,22 @@ class SampleTests {
       controller.add(2);
       controller.add(3);
 
-      new Timer(new Duration(milliseconds : 1), () {
-        controller.add(4);
-        controller.close()
-          .then((_) {
-            expect(list.length, equals(2),    reason : "sampled stream should have only two events");
-            expect(list, equals([ 3, 4 ]),    reason : "sampled stream should contain values 3 and 4");
+      return new Future
+        .delayed(new Duration(milliseconds : 1))
+        .then((_) {
+          controller.add(4);
+          return controller.close();
+        })
+        .then((_) {
+          expect(list.length, equals(2),    reason : "sampled stream should have only two events");
+          expect(list, equals([ 3, 4 ]),    reason : "sampled stream should contain values 3 and 4");
 
-            expect(error,  equals("failed"),  reason : "sampled stream should have received error");
-            expect(isDone, equals(true),      reason : "sampled stream should be completed");
-          });
-      });
+          expect(error,  equals("failed"),  reason : "sampled stream should have received error");
+          expect(isDone, equals(true),      reason : "sampled stream should be completed");
+        });
     });
-  }
 
-  void _sampleCloseOnError() {
+  void _sampleCloseOnError() =>
     test("close on error", () {
       var controller = new StreamController.broadcast(sync : true);
       var input      = controller.stream;
@@ -124,20 +125,21 @@ class SampleTests {
       controller.add(2);
       controller.add(3);
 
-      new Timer(new Duration(milliseconds : 1), () {
-        controller.add(4); // this should not be received since the error would interrupt the sample window
-        controller.addError("failed");
-        controller.add(5);
-        controller.close();
-      });
+      return new Future
+        .delayed(new Duration(milliseconds : 1))
+        .then((_) {
+          controller.add(4); // this should not be received since the error would interrupt the sample window
+          controller.addError("failed");
+          controller.add(5);
+          return controller.close();
+        })
+        .then((_) => new Future.delayed(new Duration(milliseconds : 10)))
+        .then((_) {
+          expect(list.length, equals(1),  reason : "sampled stream should have only one event");
+          expect(list, equals([ 3 ]),     reason : "sampled stream should contain value 3");
 
-      new Timer(new Duration(milliseconds : 10), () {
-        expect(list.length, equals(1),  reason : "sampled stream should have only one event");
-        expect(list, equals([ 3 ]),     reason : "sampled stream should contain value 3");
-
-        expect(error, equals("failed"), reason : "sampled stream should have received error");
-        expect(isDone, equals(true),    reason : "sampled stream should be completed");
-      });
+          expect(error, equals("failed"), reason : "sampled stream should have received error");
+          expect(isDone, equals(true),    reason : "sampled stream should be completed");
+        });
     });
-  }
 }

@@ -11,7 +11,7 @@ class CombineLatestTests {
     });
   }
 
-  void _combineLatestWithNoErrors() {
+  void _combineLatestWithNoErrors() =>
     test('no errors', () {
       var controller1 = new StreamController.broadcast(sync : true);
       var controller2 = new StreamController.broadcast(sync : true);
@@ -37,7 +37,7 @@ class CombineLatestTests {
       controller2.add(5); // paired with 4
       var future2 = controller2.close();
 
-      Future
+      return Future
         .wait([ future1, future2 ])
         .then((_) {
           expect(list.length, equals(4), reason : "combined stream should have four combined events");
@@ -48,9 +48,8 @@ class CombineLatestTests {
           expect(isDone, equals(true),  reason : "combined stream should be completed");
         });
     });
-  }
 
-  void _combineLatestNotCloseOnError() {
+  void _combineLatestNotCloseOnError() =>
     test('not close on error', () {
       var controller1 = new StreamController.broadcast(sync : true);
       var controller2 = new StreamController.broadcast(sync : true);
@@ -76,7 +75,7 @@ class CombineLatestTests {
       controller2.add(3); // paired with 1
       var future2 = controller2.close();
 
-      Future
+      return Future
         .wait([ future1, future2 ])
         .then((_) {
           expect(list.length, equals(2), reason : "combined stream should have two combind events");
@@ -86,9 +85,8 @@ class CombineLatestTests {
           expect(isDone, equals(true), reason : "combined stream should be completed");
         });
     });
-  }
 
-  void _combineLatestCloseOnError() {
+  void _combineLatestCloseOnError() =>
     test('close on error', () {
       var controller1 = new StreamController.broadcast(sync : true);
       var controller2 = new StreamController.broadcast(sync : true);
@@ -111,17 +109,18 @@ class CombineLatestTests {
       controller1.add(3);
       controller2.add(4);
 
-      new Timer(new Duration(milliseconds : 5), () {
-        expect(list.length, equals(2), reason : "combined stream should have two events before the error");
-        expect(list, equals([ "(0, 1)", "(0, 2)" ]), reason : "combined stream should contain the event value (0, 1) and (0, 2)");
+      return new Future
+        .delayed(new Duration(milliseconds : 5))
+        .then((_) {
+          expect(list.length, equals(2), reason : "combined stream should have two events before the error");
+          expect(list, equals([ "(0, 1)", "(0, 2)" ]), reason : "combined stream should contain the event value (0, 1) and (0, 2)");
 
-        expect(hasErr, equals(true), reason : "combined stream should have received error");
-        expect(isDone, equals(true), reason : "combined stream should be completed");
-      });
+          expect(hasErr, equals(true), reason : "combined stream should have received error");
+          expect(isDone, equals(true), reason : "combined stream should be completed");
+        });
     });
-  }
 
-  void _combineLatestWithUserNotCloseOnError() {
+  void _combineLatestWithUserNotCloseOnError() =>
     test('with user error not close on error', () {
       var controller1 = new StreamController.broadcast(sync : true);
       var controller2 = new StreamController.broadcast(sync : true);
@@ -149,8 +148,8 @@ class CombineLatestTests {
       controller1.add("3"); // this should cause error
       controller1.add(3); // paired with 2
 
-      Future
-      .wait([ controller1.close(), controller2.close() ])
+      return Future
+        .wait([ controller1.close(), controller2.close() ])
         .then((_) {
           expect(list.length, equals(3), reason : "combined stream should have three combind events");
           expect(list, equals([ 1, 2, 5 ]), reason : "combined stream should contain the event value 1, 2 and 5");
@@ -160,9 +159,8 @@ class CombineLatestTests {
           expect(isDone, equals(true), reason : "combined stream should be completed");
         });
     });
-  }
 
-  void _combineLatestWithUserErrorCloseOnError() {
+  void _combineLatestWithUserErrorCloseOnError() =>
     test('with user error close on rrror', () {
       var controller1 = new StreamController.broadcast(sync : true);
       var controller2 = new StreamController.broadcast(sync : true);
@@ -190,14 +188,15 @@ class CombineLatestTests {
       controller1.add("3"); // this should cause error
       controller1.add(3);
 
-      new Timer(new Duration(milliseconds : 5), () {
-        expect(list.length, equals(2), reason : "combined stream should have two events before the error");
-        expect(list, equals([ 1, 2 ]), reason : "combined stream should contain the event value 1 and 2");
+      return new Future
+        .delayed(new Duration(milliseconds : 5))
+        .then((_) {
+          expect(list.length, equals(2), reason : "combined stream should have two events before the error");
+          expect(list, equals([ 1, 2 ]), reason : "combined stream should contain the event value 1 and 2");
 
-        expect(hasErr, equals(true), reason : "combined stream should have received error");
-        expect(error is TypeError,  equals(true),  reason : "combined stream should have received a TypeError");
-        expect(isDone, equals(true), reason : "combined stream should be completed");
-      });
+          expect(hasErr, equals(true), reason : "combined stream should have received error");
+          expect(error is TypeError,  equals(true),  reason : "combined stream should have received a TypeError");
+          expect(isDone, equals(true), reason : "combined stream should be completed");
+        });
     });
-  }
 }

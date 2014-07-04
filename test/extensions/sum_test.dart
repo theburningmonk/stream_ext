@@ -14,7 +14,7 @@ class SumTests {
     });
   }
 
-  void _sumWithInts() {
+  void _sumWithInts() =>
     test("with ints", () {
       var controller = new StreamController.broadcast(sync : true);
       var input      = controller.stream;
@@ -25,13 +25,14 @@ class SumTests {
       controller.add(2);
       controller.add(3);
       controller.add(4);
-      controller.close()
+
+      return controller
+        .close()
         .then((_) => result)
         .then((sum) => expect(sum, equals(10), reason : "sum should be 10"));
     });
-  }
 
-  void _sumWithDoubles() {
+  void _sumWithDoubles() =>
     test("with doubles", () {
       var controller = new StreamController.broadcast(sync : true);
       var input      = controller.stream;
@@ -42,13 +43,14 @@ class SumTests {
       controller.add(2.5);
       controller.add(3.5);
       controller.add(4.5);
-      controller.close()
+
+      return controller
+        .close()
         .then((_) => result)
         .then((sum) => expect(sum, equals(12.0), reason : "sum should be 12.0"));
     });
-  }
 
-  void _sumWithMixOfIntsAndDoubles() {
+  void _sumWithMixOfIntsAndDoubles() =>
     test("with mix of ints and doubles", () {
       var controller = new StreamController.broadcast(sync : true);
       var input      = controller.stream;
@@ -59,13 +61,14 @@ class SumTests {
       controller.add(2.5);
       controller.add(3);
       controller.add(4.5);
-      controller.close()
+
+      return controller
+        .close()
         .then((_) => result)
         .then((sum) => expect(sum, equals(11), reason : "sum should be 11"));
     });
-  }
 
-  void _sumNotCloseOnError() {
+  void _sumNotCloseOnError() =>
     test("not close on error", () {
       var controller = new StreamController.broadcast(sync : true);
       var input      = controller.stream;
@@ -77,13 +80,14 @@ class SumTests {
       controller.addError("failed");
       controller.add(3);
       controller.add(4);
-      controller.close()
+
+      return controller
+        .close()
         .then((_) => result)
         .then((sum) => expect(sum, equals(10), reason : "sum should be 10"));
     });
-  }
 
-  void _sumCloseOnError() {
+  void _sumCloseOnError() =>
     test("close on error", () {
       var controller = new StreamController.broadcast(sync : true);
       var input      = controller.stream;
@@ -97,13 +101,14 @@ class SumTests {
       controller.addError("failed");
       controller.add(3);
       controller.add(4);
-      controller.close()
+
+      return controller
+        .close()
         .then((_) => result)
         .then((_) => expect(error, equals("failed"), reason : "sum should have failed"));
     });
-  }
 
-  void _sumWithUserErrorNotCloseOnError() {
+  void _sumWithUserErrorNotCloseOnError() =>
     test("with user error not close on error", () {
       var controller = new StreamController.broadcast(sync : true);
       var input      = controller.stream;
@@ -114,13 +119,14 @@ class SumTests {
       controller.add(2.5);
       controller.add("3"); // this should cause error but ignored
       controller.add(4.5);
-      controller.close()
+
+      return controller
+        .close()
         .then((_) => result)
         .then((sum) => expect(sum, equals(8), reason : "sum should be 8"));
     });
-  }
 
-  void _sumWithUserErrorCloseOnError() {
+  void _sumWithUserErrorCloseOnError() =>
     test("with user error close on error", () {
       var controller = new StreamController.broadcast(sync : true);
       var input      = controller.stream;
@@ -133,13 +139,14 @@ class SumTests {
       controller.add(2.5);
       controller.add("failed"); // this should cause error and terminate the sum
       controller.add(4.5);
-      controller.close()
+
+      return controller
+        .close()
         .then((_) => result)
         .then((_) => expect(error is TypeError, equals(true), reason : "sum should have failed"));
     });
-  }
 
-  void _sumWithMapper() {
+  void _sumWithMapper() =>
     test("with mapper", () {
       var controller = new StreamController.broadcast(sync : true);
       var input      = controller.stream;
@@ -150,9 +157,10 @@ class SumTests {
       controller.add(" ");
       controller.add("world");
       controller.add("!");
-      controller.close()
+
+      return controller
+        .close()
         .then((_) => result)
         .then((sum) => expect(sum, equals(12), reason : "sum should be 12"));
     });
-  }
 }

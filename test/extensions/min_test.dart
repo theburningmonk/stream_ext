@@ -16,7 +16,7 @@ class MinTests {
     });
   }
 
-  void _minWithInts() {
+  void _minWithInts() =>
     test("with ints", () {
       var controller = new StreamController.broadcast(sync : true);
       var input      = controller.stream;
@@ -27,13 +27,14 @@ class MinTests {
       controller.add(2);
       controller.add(1);
       controller.add(4);
-      controller.close()
+
+      return controller
+        .close()
         .then((_) => result)
         .then((min) => expect(min, equals(1), reason : "min should be 1"));
     });
-  }
 
-  void _minWithDoubles() {
+  void _minWithDoubles() =>
     test("with doubles", () {
       var controller = new StreamController.broadcast(sync : true);
       var input      = controller.stream;
@@ -44,13 +45,14 @@ class MinTests {
       controller.add(2.5);
       controller.add(1.5);
       controller.add(4.5);
-      controller.close()
+
+      return controller
+        .close()
         .then((_) => result)
         .then((min) => expect(min, equals(1.5), reason : "min should be 1.5"));
     });
-  }
 
-  void _minWithMixOfIntsAndDoubles() {
+  void _minWithMixOfIntsAndDoubles() =>
     test("with mix of ints and doubles", () {
       var controller = new StreamController.broadcast(sync : true);
       var input      = controller.stream;
@@ -61,13 +63,14 @@ class MinTests {
       controller.add(2.5);
       controller.add(1);
       controller.add(4.5);
-      controller.close()
+
+      return controller
+        .close()
         .then((_) => result)
         .then((min) => expect(min, equals(1), reason : "min should be 1"));
     });
-  }
 
-  void _minNotCloseOnError() {
+  void _minNotCloseOnError() =>
     test("not close on error", () {
       var controller = new StreamController.broadcast(sync : true);
       var input      = controller.stream;
@@ -79,13 +82,14 @@ class MinTests {
       controller.addError("failed");
       controller.add(1);
       controller.add(4);
-      controller.close()
+
+      return controller
+        .close()
         .then((_) => result)
         .then((min) => expect(min, equals(1), reason : "min should be 1"));
     });
-  }
 
-  void _minCloseOnError() {
+  void _minCloseOnError() =>
     test("close on error", () {
       var controller = new StreamController.broadcast(sync : true);
       var input      = controller.stream;
@@ -99,13 +103,14 @@ class MinTests {
       controller.addError("failed");
       controller.add(3);
       controller.add(4);
-      controller.close()
+
+      return controller
+        .close()
         .then((_) => result)
         .then((_) => expect(error, equals("failed"), reason : "min should have failed"));
     });
-  }
 
-  void _minWithUserErrorNotCloseOnError() {
+  void _minWithUserErrorNotCloseOnError() =>
     test("with user error not close on error", () {
       var controller = new StreamController.broadcast(sync : true);
       var input      = controller.stream;
@@ -116,13 +121,14 @@ class MinTests {
       controller.add(2.5);
       controller.add("3"); // this should cause error but ignored
       controller.add(4.5);
-      controller.close()
+
+      return controller
+        .close()
         .then((_) => result)
         .then((min) => expect(min, equals(2.5), reason : "min should be 2.5"));
     });
-  }
 
-  void _minWithUserErrorCloseOnError() {
+  void _minWithUserErrorCloseOnError() =>
     test("with user error close on error", () {
       var controller = new StreamController.broadcast(sync : true);
       var input      = controller.stream;
@@ -135,13 +141,14 @@ class MinTests {
       controller.add(1);
       controller.add("failed"); // this should cause error and terminate the sum
       controller.add(4.5);
-      controller.close()
+
+      return controller
+        .close()
         .then((_) => result)
         .then((_) => expect(error is TypeError, equals(true), reason : "min should have failed"));
     });
-  }
 
-  void _minWithMapper() {
+  void _minWithMapper() =>
     test("with mapper", () {
       var controller = new StreamController.broadcast(sync : true);
       var input      = controller.stream;
@@ -152,9 +159,10 @@ class MinTests {
       controller.add(" ");
       controller.add("world");
       controller.add("!");
-      controller.close()
+
+      return controller
+        .close()
         .then((_) => result)
         .then((min) => expect(min, equals(" "), reason : "min should be ' '"));
     });
-  }
 }

@@ -9,7 +9,7 @@ class ThrottleTests {
     });
   }
 
-  void _throttleWithNoErrors() {
+  void _throttleWithNoErrors() =>
     test("no errors", () {
       var controller = new StreamController.broadcast(sync : true);
       var input      = controller.stream;
@@ -27,22 +27,23 @@ class ThrottleTests {
       controller.add(2);
       controller.add(3);
 
-      new Timer(new Duration(milliseconds : 2), () {
-        controller.add(4);
-        controller.close();
-      });
+      return new Future
+        .delayed(new Duration(milliseconds : 2))
+        .then((_) {
+          controller.add(4);
+          return controller.close();
+        })
+        .then((_) => new Future.delayed(new Duration(milliseconds : 10)))
+        .then((_) {
+          expect(list.length, equals(3),   reason : "throttled stream should have only three events");
+          expect(list, equals([ 0, 3, 4]), reason : "throttled stream should contain values 0, 3 and 4");
 
-      new Timer(new Duration(milliseconds : 10), () {
-        expect(list.length, equals(3),   reason : "throttled stream should have only three events");
-        expect(list, equals([ 0, 3, 4]), reason : "throttled stream should contain values 0, 3 and 4");
-
-        expect(hasErr, equals(false), reason : "throttled stream should not have received error");
-        expect(isDone, equals(true),  reason : "throttled stream should be completed");
-      });
+          expect(hasErr, equals(false), reason : "throttled stream should not have received error");
+          expect(isDone, equals(true),  reason : "throttled stream should be completed");
+        });
     });
-  }
 
-  void _throttleNotCloseOnError() {
+  void _throttleNotCloseOnError() =>
     test("not close on error", () {
       var controller = new StreamController.broadcast(sync : true);
       var input      = controller.stream;
@@ -61,22 +62,23 @@ class ThrottleTests {
       controller.add(2);
       controller.add(3);
 
-      new Timer(new Duration(milliseconds : 2), () {
-        controller.add(4);
-        controller.close();
-      });
+      return new Future
+        .delayed(new Duration(milliseconds : 2))
+        .then((_) {
+          controller.add(4);
+          return controller.close();
+        })
+        .then((_) => new Future.delayed(new Duration(milliseconds : 10)))
+        .then((_) {
+          expect(list.length, equals(3),   reason : "throttled stream should have only three events");
+          expect(list, equals([ 0, 3, 4]), reason : "throttled stream should contain values 0, 3 and 4");
 
-      new Timer(new Duration(milliseconds : 10), () {
-        expect(list.length, equals(3),   reason : "throttled stream should have only three events");
-        expect(list, equals([ 0, 3, 4]), reason : "throttled stream should contain values 0, 3 and 4");
-
-        expect(hasErr, equals(true), reason : "throttled stream should have received error");
-        expect(isDone, equals(true), reason : "throttled stream should be completed");
-      });
+          expect(hasErr, equals(true), reason : "throttled stream should have received error");
+          expect(isDone, equals(true), reason : "throttled stream should be completed");
+        });
     });
-  }
 
-  void _throttleCloseOnError() {
+  void _throttleCloseOnError() =>
     test("close on error", () {
       var controller = new StreamController.broadcast(sync : true);
       var input      = controller.stream;
@@ -94,21 +96,22 @@ class ThrottleTests {
       controller.add(2);
       controller.add(3);
 
-      new Timer(new Duration(milliseconds : 2), () {
-        controller.add(4);
-        controller.addError("failed");
-        controller.add(5); // this should not be received since the error would have closed the output stream
+      return new Future
+        .delayed(new Duration(milliseconds : 2))
+        .then((_) {
+          controller.add(4);
+          controller.addError("failed");
+          controller.add(5); // this should not be received since the error would have closed the output stream
 
-        controller.close();
-      });
+          return controller.close();
+        })
+        .then((_) => new Future.delayed(new Duration(milliseconds : 10)))
+        .then((_) {
+          expect(list.length, equals(3),   reason : "throttled stream should have only three events");
+          expect(list, equals([ 0, 3, 4]), reason : "throttled stream should contain values 0, 3 and 4");
 
-      new Timer(new Duration(milliseconds : 10), () {
-        expect(list.length, equals(3),   reason : "throttled stream should have only three events");
-        expect(list, equals([ 0, 3, 4]), reason : "throttled stream should contain values 0, 3 and 4");
-
-        expect(hasErr, equals(true), reason : "throttled stream should have received error");
-        expect(isDone, equals(true), reason : "throttled stream should be completed");
-      });
+          expect(hasErr, equals(true), reason : "throttled stream should have received error");
+          expect(isDone, equals(true), reason : "throttled stream should be completed");
+        });
     });
-  }
 }

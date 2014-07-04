@@ -10,7 +10,7 @@ class TimeOutTests {
     });
   }
 
-  void _timeOutWithNoValues() {
+  void _timeOutWithNoValues() =>
     test("no values", () {
       var controller = new StreamController.broadcast(sync : true);
       var input      = controller.stream;
@@ -23,19 +23,18 @@ class TimeOutTests {
                  onError : (err) => error = err,
                  onDone  : ()    => isDone = true);
 
-      Future future = new Future.delayed(new Duration(milliseconds : 2)).then((_) => controller.close());
-      future.then((_) {
-        expect(list.length, equals(0),   reason : "output stream should have no value");
+      return new Future
+        .delayed(new Duration(milliseconds : 2))
+        .then((_) => controller.close())
+        .then((_) {
+          expect(list.length, equals(0),   reason : "output stream should have no value");
 
-        expect(error is TimeoutError, equals(true), reason : "output stream should have received a timeout error");
-        expect(isDone, equals(true),  reason : "output stream should be completed");
-      });
-      
-      expect(future, completes);
+          expect(error is TimeoutError, equals(true), reason : "output stream should have received a timeout error");
+          expect(isDone, equals(true),  reason : "output stream should be completed");
+        });
     });
-  }
 
-  void _timeOutWithGapInValues() {
+  void _timeOutWithGapInValues() =>
     test("gap in values", () {
       var controller = new StreamController.broadcast(sync : true);
       var input      = controller.stream;
@@ -50,20 +49,19 @@ class TimeOutTests {
 
       controller.add(0);
 
-      Future future = new Future.delayed(new Duration(milliseconds : 2)).then((_) => controller.close());
-      future.then((_) {
-        expect(list.length, equals(1), reason : "output stream should have 1 value");
-        expect(list, equals([ 0 ]), reason : "output stream should contain the value 1");
+      return new Future
+        .delayed(new Duration(milliseconds : 2))
+        .then((_) => controller.close())
+        .then((_) {
+          expect(list.length, equals(1), reason : "output stream should have 1 value");
+          expect(list, equals([ 0 ]), reason : "output stream should contain the value 1");
 
-        expect(error is TimeoutError, equals(true), reason : "output stream should have received a timeout error");
-        expect(isDone, equals(true),  reason : "output stream should be completed");
-      });
-      
-      expect(future, completes);
+          expect(error is TimeoutError, equals(true), reason : "output stream should have received a timeout error");
+          expect(isDone, equals(true),  reason : "output stream should be completed");
+        });
     });
-  }
 
-  void _timeOutNotCloseOnError() {
+  void _timeOutNotCloseOnError() =>
     test("not close on error", () {
       var controller = new StreamController.broadcast(sync : true);
       var input      = controller.stream;
@@ -80,22 +78,21 @@ class TimeOutTests {
       controller.addError("failed");
       controller.add(1);
 
-      Future future = new Future.delayed(new Duration(milliseconds : 2)).then((_) => controller.close());
-      future.then((_) {
-        expect(list.length, equals(2), reason : "output stream should have 2 value");
-        expect(list, equals([ 0, 1 ]), reason : "output stream should contain the values 0 and 1");
+      return new Future
+        .delayed(new Duration(milliseconds : 2))
+        .then((_) => controller.close())
+        .then((_) {
+          expect(list.length, equals(2), reason : "output stream should have 2 value");
+          expect(list, equals([ 0, 1 ]), reason : "output stream should contain the values 0 and 1");
 
-        expect(errors.length, equals(2), reason : "output stream should have received 2 errors");
-        expect(errors[0], equals("failed"), reason : "output stream should have an error value 'failed'");
-        expect(errors[1] is TimeoutError, equals(true), reason : "output stream should have received a timeout error");
-        expect(isDone, equals(true),  reason : "output stream should be completed");
-      });
-      
-      expect(future, completes);
+          expect(errors.length, equals(2), reason : "output stream should have received 2 errors");
+          expect(errors[0], equals("failed"), reason : "output stream should have an error value 'failed'");
+          expect(errors[1] is TimeoutError, equals(true), reason : "output stream should have received a timeout error");
+          expect(isDone, equals(true),  reason : "output stream should be completed");
+        });
     });
-  }
 
-  void _timeOutCloseOnError() {
+  void _timeOutCloseOnError() =>
     test("close on error", () {
       var controller = new StreamController.broadcast(sync : true);
       var input      = controller.stream;
@@ -112,17 +109,16 @@ class TimeOutTests {
       controller.addError("failed");
       controller.add(1);
 
-      Future future = new Future.delayed(new Duration(milliseconds : 2)).then((_) => controller.close());
-      future.then((_) {
-        expect(list.length, equals(1), reason : "output stream should have only 1 value before the error");
-        expect(list, equals([ 0 ]), reason : "output stream should contain the value 0");
+      return new Future
+        .delayed(new Duration(milliseconds : 2))
+        .then((_) => controller.close())
+        .then((_) {
+          expect(list.length, equals(1), reason : "output stream should have only 1 value before the error");
+          expect(list, equals([ 0 ]), reason : "output stream should contain the value 0");
 
-        expect(errors.length, equals(1), reason : "output stream should have received 1 error");
-        expect(errors, equals([ "failed" ]), reason : "output stream should not have received a timeout error");
-        expect(isDone, equals(true),  reason : "output stream should be completed");
-      });
-      
-      expect(future, completes);
+          expect(errors.length, equals(1), reason : "output stream should have received 1 error");
+          expect(errors, equals([ "failed" ]), reason : "output stream should not have received a timeout error");
+          expect(isDone, equals(true),  reason : "output stream should be completed");
+        });
     });
-  }
 }

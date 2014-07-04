@@ -11,7 +11,7 @@ class ZipTests {
     });
   }
 
-  void _zipWithNoErrors() {
+  void _zipWithNoErrors() =>
     test("no errors", () {
       var controller1 = new StreamController.broadcast(sync : true);
       var controller2 = new StreamController.broadcast(sync : true);
@@ -33,12 +33,12 @@ class ZipTests {
       controller2.add(5);
       controller1.add(2); // paired with 2
 
-      var future2 = controller2.close();
-      controller1.add(6); // not received since other stream is complete
-      var future1 = controller1.close();
-
-      Future
-        .wait([ future1, future2 ])
+      return controller2
+        .close()
+        .then((_) {
+          controller1.add(6); // not received since other stream is complete
+          return controller1.close();
+        })
         .then((_) {
           expect(list.length, equals(3),   reason : "zipped stream should have three events");
           expect(list, equals([ "0, 3", "1, 4", "2, 5" ]),
@@ -48,9 +48,8 @@ class ZipTests {
           expect(isDone, equals(true),  reason : "zipped stream should be completed");
         });
     });
-  }
 
-  void _zipNotCloseOnError() {
+  void _zipNotCloseOnError() =>
     test("not close on error", () {
       var controller1 = new StreamController.broadcast(sync : true);
       var controller2 = new StreamController.broadcast(sync : true);
@@ -74,12 +73,12 @@ class ZipTests {
       controller2.add(5);
       controller1.add(2); // paired with 2
 
-      var future2 = controller2.close();
-      controller1.add(6); // not received since other stream is complete
-      var future1 = controller1.close();
-
-      Future
-        .wait([ future1, future2 ])
+      return controller2
+        .close()
+        .then((_) {
+          controller1.add(6); // not received since other stream is complete
+          return controller1.close();
+        })
         .then((_) {
           expect(list.length, equals(3),   reason : "zipped stream should have three events");
           expect(list, equals([ "0, 3", "1, 4", "2, 5" ]),
@@ -89,9 +88,8 @@ class ZipTests {
           expect(isDone, equals(true), reason : "zipped stream should be completed");
         });
     });
-  }
 
-  void _zipCloseOnError() {
+  void _zipCloseOnError() =>
     test("close on error", () {
       var controller1 = new StreamController.broadcast(sync : true);
       var controller2 = new StreamController.broadcast(sync : true);
@@ -112,17 +110,18 @@ class ZipTests {
       controller1.addError("failed");
       controller2.add(4); // not paired
 
-      new Timer(new Duration(milliseconds : 5), () {
-        expect(list.length, equals(1),   reason : "zipped stream should have only one event before the error");
-        expect(list, equals([ "0, 3" ]), reason : "zipped stream should contain values (0, 3)");
+      return new Future
+        .delayed(new Duration(milliseconds : 5))
+        .then((_) {
+          expect(list.length, equals(1),   reason : "zipped stream should have only one event before the error");
+          expect(list, equals([ "0, 3" ]), reason : "zipped stream should contain values (0, 3)");
 
-        expect(hasErr, equals(true), reason : "zipped stream should have received error");
-        expect(isDone, equals(true), reason : "zipped stream should be completed");
-      });
+          expect(hasErr, equals(true), reason : "zipped stream should have received error");
+          expect(isDone, equals(true), reason : "zipped stream should be completed");
+        });
     });
-  }
 
-  void _zipWithUserErrorNotCloseOnError() {
+  void _zipWithUserErrorNotCloseOnError() =>
     test("with user error not close on error", () {
       var controller1 = new StreamController.broadcast(sync : true);
       var controller2 = new StreamController.broadcast(sync : true);
@@ -147,7 +146,7 @@ class ZipTests {
       controller2.add("4"); // should cause error
       controller2.add(4); // will still error since "4" is the next value to be processed
 
-      Future
+      return Future
         .wait([ controller1.close(), controller2.close() ])
         .then((_) {
           expect(list.length, equals(1), reason : "zipped stream should have only one event before bad value");
@@ -158,9 +157,8 @@ class ZipTests {
           expect(isDone, equals(true), reason : "zipped stream should be completed");
         });
     });
-  }
 
-  void _zipWithUserErrorCloseOnError() {
+  void _zipWithUserErrorCloseOnError() =>
     test("with user error close on error", () {
       var controller1 = new StreamController.broadcast(sync : true);
       var controller2 = new StreamController.broadcast(sync : true);
@@ -185,14 +183,15 @@ class ZipTests {
       controller2.add("4"); // should cause error
       controller2.add(4); // stream should be closed by now
 
-      new Timer(new Duration(milliseconds : 5), () {
-        expect(list.length, equals(1), reason : "zipped stream should have only one event before bad value");
-        expect(list, equals([ 3 ]), reason : "zipped stream should contain values 3");
+      return new Future
+        .delayed(new Duration(milliseconds : 5))
+        .then((_) {
+          expect(list.length, equals(1), reason : "zipped stream should have only one event before bad value");
+          expect(list, equals([ 3 ]), reason : "zipped stream should contain values 3");
 
-        expect(numErrors, equals(1), reason : "zipped stream should have received 1 error");
-        expect(errors.every((x) => x is TypeError), equals(true), reason : "zipped stream should have received TypeError");
-        expect(isDone, equals(true), reason : "zipped stream should be completed");
-      });
+          expect(numErrors, equals(1), reason : "zipped stream should have received 1 error");
+          expect(errors.every((x) => x is TypeError), equals(true), reason : "zipped stream should have received TypeError");
+          expect(isDone, equals(true), reason : "zipped stream should be completed");
+        });
     });
-  }
 }

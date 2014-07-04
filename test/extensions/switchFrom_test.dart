@@ -10,7 +10,7 @@ class SwitchFromTests {
     });
   }
 
-  void _switchStreamsWithValues() {
+  void _switchStreamsWithValues() =>
     test('all streams produced value', () {
       var controller1 = new StreamController.broadcast(sync : true);
       var controller2 = new StreamController.broadcast(sync : true);
@@ -36,7 +36,8 @@ class SwitchFromTests {
       controller2.add(3);
       controller2.add(4);
 
-      controller.close()
+      return controller
+        .close()
         .then((_) {
           controller2.add(5);
           return controller2.close();
@@ -50,9 +51,8 @@ class SwitchFromTests {
         })
         .then((_) => controller1.close());
     });
-  }
 
-  void _swtichActiveStreamClosesFirst() {
+  void _swtichActiveStreamClosesFirst() =>
     test('active stream closes first', () {
       var controller1 = new StreamController.broadcast(sync : true);
       var controller2 = new StreamController.broadcast(sync : true);
@@ -73,7 +73,8 @@ class SwitchFromTests {
       controller.add(stream1);
       controller.add(stream2);
 
-      controller2.close() // the active stream closes first but the input stream is still going
+      return controller2
+        .close() // the active stream closes first but the input stream is still going
         .then((_) => expect(isDone, equals(false), reason : "output stream should be closed only after the input stream closes"))
         .then((_) => controller.close())
         .then((_) {
@@ -84,9 +85,8 @@ class SwitchFromTests {
         })
         .then((_) => controller1.close());
     });
-  }
 
-  void _swtichNotCloseOnError() {
+  void _swtichNotCloseOnError() =>
     test('not close on error', () {
       var controller1 = new StreamController.broadcast(sync : true);
       var controller2 = new StreamController.broadcast(sync : true);
@@ -114,7 +114,8 @@ class SwitchFromTests {
       controller2.addError("failed3");
       controller2.add(3);
 
-      controller.close() // the input stream closes first but the active stream is still going
+      return controller
+        .close() // the input stream closes first but the active stream is still going
         .then((_) => expect(isDone, equals(false), reason : "output stream should be closed only after the active stream closes"))
         .then((_) => controller2.close())
         .then((_) {
@@ -126,9 +127,8 @@ class SwitchFromTests {
         })
         .then((_) => controller1.close());
     });
-  }
 
-  void _swtichCloseOnError() {
+  void _swtichCloseOnError() =>
     test('close on error', () {
       var controller1 = new StreamController.broadcast(sync : true);
       var controller2 = new StreamController.broadcast(sync : true);
@@ -162,9 +162,6 @@ class SwitchFromTests {
       expect(errors, equals([ "failed1" ]), reason : "output stream should have received error");
       expect(isDone, equals(true),  reason : "output stream should be completed");
 
-      controller1.close();
-      controller2.close();
-      controller1.close();
+      return Future.wait([ controller1.close(), controller2.close() ]);
     });
-  }
 }

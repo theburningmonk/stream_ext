@@ -9,7 +9,7 @@ class MergeTests {
     });
   }
 
-  void _mergeWithNoErrors() {
+  void _mergeWithNoErrors() =>
     test('no errors', () {
       var controller1 = new StreamController.broadcast(sync : true);
       var controller2 = new StreamController.broadcast(sync : true);
@@ -30,7 +30,7 @@ class MergeTests {
       controller2.add(2);
       controller1.add(3);
 
-      Future
+      return Future
         .wait([ controller1.close(), controller2.close() ])
         .then((_) {
           expect(list.length, equals(4), reason : "merged stream should contain 4 values");
@@ -40,9 +40,8 @@ class MergeTests {
           expect(isDone, equals(true),  reason : "merged stream should be completed");
         });
     });
-  }
 
-  void _mergeNotCloseOnError() {
+  void _mergeNotCloseOnError() =>
     test('not close on error', () {
       var controller1 = new StreamController.broadcast(sync : true);
       var controller2 = new StreamController.broadcast(sync : true);
@@ -63,7 +62,7 @@ class MergeTests {
       controller1.add(1);
       controller2.add(2);
 
-      Future
+      return Future
         .wait([ controller1.close(), controller2.close() ])
         .then((_) {
           expect(list.length, equals(3), reason : "merged stream should have all three events");
@@ -73,9 +72,8 @@ class MergeTests {
           expect(isDone, equals(true), reason : "merged stream should be completed");
         });
     });
-  }
 
-  void _mergeCloseOnError() {
+  void _mergeCloseOnError() =>
     test('close on error', () {
       var controller1 = new StreamController.broadcast(sync : true);
       var controller2 = new StreamController.broadcast(sync : true);
@@ -96,7 +94,7 @@ class MergeTests {
       controller1.add(1);
       controller2.add(2);
 
-      Future
+      return Future
         .wait([ controller1.close(), controller2.close() ])
         .then((_) {
           expect(list.length, equals(1), reason : "merged stream should have only one event before the error");
@@ -106,5 +104,4 @@ class MergeTests {
           expect(isDone, equals(true), reason : "merged stream should be completed");
         });
     });
-  }
 }

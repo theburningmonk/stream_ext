@@ -11,7 +11,7 @@ class ScanTests {
     });
   }
 
-  void _scanWithNoErrors() {
+  void _scanWithNoErrors() =>
     test("no errors", () {
       var controller = new StreamController.broadcast(sync : true);
       var input      = controller.stream;
@@ -28,18 +28,20 @@ class ScanTests {
       controller.add(2);
       controller.add(3);
       controller.add(4);
-      controller.close().then((_) {
-        expect(list.length, equals(4), reason : "output stream should have 4 events");
-        expect(list, equals([ 1, 3, 6, 10 ]),
-               reason : "output stream should contain values 1, 3, 6 and 10");
 
-        expect(hasErr, equals(false), reason : "output stream should not have received error");
-        expect(isDone, equals(true),  reason : "output stream should be completed");
-      });
+      return controller
+        .close()
+        .then((_) {
+          expect(list.length, equals(4), reason : "output stream should have 4 events");
+          expect(list, equals([ 1, 3, 6, 10 ]),
+                 reason : "output stream should contain values 1, 3, 6 and 10");
+
+          expect(hasErr, equals(false), reason : "output stream should not have received error");
+          expect(isDone, equals(true),  reason : "output stream should be completed");
+        });
     });
-  }
 
-  void _scanNotCloseOnError() {
+  void _scanNotCloseOnError() =>
     test("not close on error", () {
       var controller = new StreamController.broadcast(sync : true);
       var input      = controller.stream;
@@ -57,18 +59,20 @@ class ScanTests {
       controller.addError("failed");
       controller.add(3);
       controller.add(4);
-      controller.close().then((_) {
-        expect(list.length, equals(4), reason : "output stream should have 4 events");
-        expect(list, equals([ 1, 3, 6, 10 ]),
-               reason : "output stream should contain values 1, 3, 6 and 10");
 
-        expect(hasErr, equals(true), reason : "output stream should have received error");
-        expect(isDone, equals(true), reason : "output stream should be completed");
-      });
+      return controller
+        .close()
+        .then((_) {
+          expect(list.length, equals(4), reason : "output stream should have 4 events");
+          expect(list, equals([ 1, 3, 6, 10 ]),
+                 reason : "output stream should contain values 1, 3, 6 and 10");
+
+          expect(hasErr, equals(true), reason : "output stream should have received error");
+          expect(isDone, equals(true), reason : "output stream should be completed");
+        });
     });
-  }
 
-  void _scanCloseOnError() {
+  void _scanCloseOnError() =>
     test("close on error", () {
       var controller = new StreamController.broadcast(sync : true);
       var input      = controller.stream;
@@ -87,18 +91,19 @@ class ScanTests {
       controller.add(3);
       controller.add(4);
 
-      new Timer(new Duration(milliseconds : 5), () {
-        expect(list.length, equals(2), reason : "output stream should have only two events before the error");
-        expect(list, equals([ 1, 3 ]),
-               reason : "output stream should contain values 1 and 3");
+      return new Future
+        .delayed(new Duration(milliseconds : 5))
+        .then((_) {
+          expect(list.length, equals(2), reason : "output stream should have only two events before the error");
+          expect(list, equals([ 1, 3 ]),
+                 reason : "output stream should contain values 1 and 3");
 
-        expect(hasErr, equals(true), reason : "output stream should have received error");
-        expect(isDone, equals(true), reason : "output stream should be completed");
-      });
+          expect(hasErr, equals(true), reason : "output stream should have received error");
+          expect(isDone, equals(true), reason : "output stream should be completed");
+        });
     });
-  }
 
-  void _scanWithUserErrorNotCloseOnError() {
+  void _scanWithUserErrorNotCloseOnError() =>
     test("with user error not close on error", () {
       var controller = new StreamController.broadcast(sync : true);
       var input      = controller.stream;
@@ -119,18 +124,20 @@ class ScanTests {
       controller.add(2);
       controller.add("3"); // this should cause error
       controller.add(4);
-      controller.close().then((_) {
-        expect(list.length, equals(3),    reason : "output stream should have three events");
-        expect(list, equals([ 1, 3, 7 ]), reason : "output stream should contain values 1, 3 and 7");
 
-        expect(hasErr, equals(true), reason : "output stream should have received error");
-        expect(error is TypeError, equals(true), reason : "output stream should have received a TypeError");
-        expect(isDone, equals(true), reason : "output stream should be completed");
-      });
+      return controller
+        .close()
+        .then((_) {
+          expect(list.length, equals(3),    reason : "output stream should have three events");
+          expect(list, equals([ 1, 3, 7 ]), reason : "output stream should contain values 1, 3 and 7");
+
+          expect(hasErr, equals(true), reason : "output stream should have received error");
+          expect(error is TypeError, equals(true), reason : "output stream should have received a TypeError");
+          expect(isDone, equals(true), reason : "output stream should be completed");
+        });
     });
-  }
 
-  void _scanWithUserErrorCloseOnError() {
+  void _scanWithUserErrorCloseOnError() =>
     test("with user error close on error", () {
       var controller = new StreamController.broadcast(sync : true);
       var input      = controller.stream;
@@ -152,14 +159,15 @@ class ScanTests {
       controller.add("3"); // this should cause error
       controller.add(4);
 
-      new Timer(new Duration(milliseconds : 5), () {
-        expect(list.length, equals(2),    reason : "output stream should have two events before the error");
-        expect(list, equals([ 1, 3 ]), reason : "output stream should contain values 1 and 3");
+      return new Future
+        .delayed(new Duration(milliseconds : 5))
+        .then((_) {
+          expect(list.length, equals(2),    reason : "output stream should have two events before the error");
+          expect(list, equals([ 1, 3 ]), reason : "output stream should contain values 1 and 3");
 
-        expect(hasErr, equals(true), reason : "output stream should have received error");
-        expect(error is TypeError, equals(true), reason : "output stream should have received a TypeError");
-        expect(isDone, equals(true), reason : "output stream should be completed");
-      });
+          expect(hasErr, equals(true), reason : "output stream should have received error");
+          expect(error is TypeError, equals(true), reason : "output stream should have received a TypeError");
+          expect(isDone, equals(true), reason : "output stream should be completed");
+        });
     });
-  }
 }

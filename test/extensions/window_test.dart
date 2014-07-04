@@ -9,7 +9,7 @@ class WindowTests {
     });
   }
 
-  void _windowWithNoErrors() {
+  void _windowWithNoErrors() =>
     test("no errors", () {
       var controller = new StreamController.broadcast(sync : true);
       var input      = controller.stream;
@@ -30,18 +30,19 @@ class WindowTests {
       controller.add(5);
       controller.add(6);
 
-      controller.close().then((_) {
-        expect(list.length, equals(3),   reason : "windowed stream should have three events");
-        expect(list, equals([ [ 0, 1, 2 ], [ 3, 4, 5 ], [ 6 ] ]),
-               reason : "windowed stream should contain lists [ 0, 1, 2 ], [ 3, 4, 5 ] and [ 6 ]");
+      return controller
+        .close()
+        .then((_) {
+          expect(list.length, equals(3),   reason : "windowed stream should have three events");
+          expect(list, equals([ [ 0, 1, 2 ], [ 3, 4, 5 ], [ 6 ] ]),
+                 reason : "windowed stream should contain lists [ 0, 1, 2 ], [ 3, 4, 5 ] and [ 6 ]");
 
-        expect(hasErr, equals(false), reason : "windowed stream should not have received error");
-        expect(isDone, equals(true),  reason : "windowed stream should be completed");
-      });
+          expect(hasErr, equals(false), reason : "windowed stream should not have received error");
+          expect(isDone, equals(true),  reason : "windowed stream should be completed");
+        });
     });
-  }
 
-  void _windowNotCloseOnError() {
+  void _windowNotCloseOnError() =>
     test("not close on error", () {
       var controller = new StreamController.broadcast(sync : true);
       var input      = controller.stream;
@@ -63,18 +64,19 @@ class WindowTests {
       controller.add(5);
       controller.add(6);
 
-      controller.close().then((_) {
-        expect(list.length, equals(3),   reason : "windowed stream should have three events");
-        expect(list, equals([ [ 0, 1, 2 ], [ 3, 4, 5 ], [ 6 ] ]),
-               reason : "windowed stream should contain lists [ 0, 1, 2 ], [ 3, 4, 5 ] and [ 6 ]");
+      return controller
+        .close()
+        .then((_) {
+          expect(list.length, equals(3),   reason : "windowed stream should have three events");
+          expect(list, equals([ [ 0, 1, 2 ], [ 3, 4, 5 ], [ 6 ] ]),
+                 reason : "windowed stream should contain lists [ 0, 1, 2 ], [ 3, 4, 5 ] and [ 6 ]");
 
-        expect(hasErr, equals(true), reason : "windowed stream should have received error");
-        expect(isDone, equals(true), reason : "windowed stream should be completed");
-      });
+          expect(hasErr, equals(true), reason : "windowed stream should have received error");
+          expect(isDone, equals(true), reason : "windowed stream should be completed");
+        });
     });
-  }
 
-  void _windowCloseOnError() {
+  void _windowCloseOnError() =>
     test("close on error", () {
       var controller = new StreamController.broadcast(sync : true);
       var input      = controller.stream;
@@ -94,14 +96,15 @@ class WindowTests {
       controller.addError("failed");
       controller.add(4);
 
-      controller.close().then((_) {
-        expect(list.length, equals(1),   reason : "windowed stream should have only one event before the error");
-        expect(list, equals([ [ 0, 1, 2 ] ]),
-               reason : "windowed stream should contain list [ 0, 1, 2 ]");
+      return controller
+        .close()
+        .then((_) {
+          expect(list.length, equals(1),   reason : "windowed stream should have only one event before the error");
+          expect(list, equals([ [ 0, 1, 2 ] ]),
+                 reason : "windowed stream should contain list [ 0, 1, 2 ]");
 
-        expect(hasErr, equals(true), reason : "windowed stream should have received error");
-        expect(isDone, equals(true), reason : "windowed stream should be completed");
-      });
+          expect(hasErr, equals(true), reason : "windowed stream should have received error");
+          expect(isDone, equals(true), reason : "windowed stream should be completed");
+        });
     });
-  }
 }

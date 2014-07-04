@@ -16,7 +16,7 @@ class MaxTests {
     });
   }
 
-  void _maxWithInts() {
+  void _maxWithInts() =>
     test("with ints", () {
       var controller = new StreamController.broadcast(sync : true);
       var input      = controller.stream;
@@ -27,13 +27,14 @@ class MaxTests {
       controller.add(2);
       controller.add(1);
       controller.add(4);
-      controller.close()
+
+      return controller
+        .close()
         .then((_) => result)
         .then((max) => expect(max, equals(4), reason : "max should be 4"));
     });
-  }
 
-  void _maxWithDoubles() {
+  void _maxWithDoubles() =>
     test("with doubles", () {
       var controller = new StreamController.broadcast(sync : true);
       var input      = controller.stream;
@@ -44,13 +45,14 @@ class MaxTests {
       controller.add(2.5);
       controller.add(1.5);
       controller.add(4.5);
-      controller.close()
+
+      return controller
+        .close()
         .then((_) => result)
         .then((max) => expect(max, equals(4.5), reason : "max should be 4.5"));
     });
-  }
 
-  void _maxWithMixOfIntsAndDoubles() {
+  void _maxWithMixOfIntsAndDoubles() =>
     test("with mix of ints and doubles", () {
       var controller = new StreamController.broadcast(sync : true);
       var input      = controller.stream;
@@ -61,13 +63,14 @@ class MaxTests {
       controller.add(2.5);
       controller.add(1);
       controller.add(4.5);
-      controller.close()
+
+      return controller
+        .close()
         .then((_) => result)
         .then((max) => expect(max, equals(4.5), reason : "max should be 4.5"));
     });
-  }
 
-  void _maxNotCloseOnError() {
+  void _maxNotCloseOnError() =>
     test("not close on error", () {
       var controller = new StreamController.broadcast(sync : true);
       var input      = controller.stream;
@@ -79,13 +82,14 @@ class MaxTests {
       controller.addError("failed");
       controller.add(1);
       controller.add(4);
-      controller.close()
+
+      return controller
+        .close()
         .then((_) => result)
         .then((max) => expect(max, equals(4), reason : "max should be 4"));
     });
-  }
 
-  void _maxCloseOnError() {
+  void _maxCloseOnError() =>
     test("close on error", () {
       var controller = new StreamController.broadcast(sync : true);
       var input      = controller.stream;
@@ -99,13 +103,14 @@ class MaxTests {
       controller.addError("failed");
       controller.add(3);
       controller.add(4);
-      controller.close()
+
+      return controller
+        .close()
         .then((_) => result)
         .then((_) => expect(error, equals("failed"), reason : "max should have failed"));
     });
-  }
 
-  void _maxWithUserErrorNotCloseOnError() {
+  void _maxWithUserErrorNotCloseOnError() =>
     test("with user error not close on error", () {
       var controller = new StreamController.broadcast(sync : true);
       var input      = controller.stream;
@@ -116,13 +121,14 @@ class MaxTests {
       controller.add(2.5);
       controller.add("3"); // this should cause error but ignored
       controller.add(4.5);
-      controller.close()
+
+      return controller
+        .close()
         .then((_) => result)
         .then((max) => expect(max, equals(4.5), reason : "max should be 4.5"));
     });
-  }
 
-  void _maxWithUserErrorCloseOnError() {
+  void _maxWithUserErrorCloseOnError() =>
     test("with user error close on error", () {
       var controller = new StreamController.broadcast(sync : true);
       var input      = controller.stream;
@@ -135,13 +141,14 @@ class MaxTests {
       controller.add(1);
       controller.add("failed"); // this should cause error and terminate the sum
       controller.add(4.5);
-      controller.close()
+
+      return controller
+        .close()
         .then((_) => result)
         .then((_) => expect(error is TypeError, equals(true), reason : "max should have failed"));
     });
-  }
 
-  void _maxWithMapper() {
+  void _maxWithMapper() =>
     test("with mapper", () {
       var controller = new StreamController.broadcast(sync : true);
       var input      = controller.stream;
@@ -152,9 +159,10 @@ class MaxTests {
       controller.add(" ");
       controller.add("world");
       controller.add("!");
-      controller.close()
+
+      return controller
+        .close()
         .then((_) => result)
         .then((max) => expect(max, equals("hello"), reason : "max should be 'hello'"));
     });
-  }
 }
