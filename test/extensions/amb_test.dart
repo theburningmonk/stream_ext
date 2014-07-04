@@ -12,7 +12,7 @@ class AmbTests {
     });
   }
 
-  void _ambFirstStreamWins() {
+  void _ambFirstStreamWins() =>
     test('fst stream wins', () {
       var controller1 = new StreamController.broadcast(sync : true);
       var controller2 = new StreamController.broadcast(sync : true);
@@ -33,7 +33,7 @@ class AmbTests {
       controller2.add(2); // ignored
       controller1.add(3);
 
-      Future
+      return Future
         .wait([ controller1.close(), controller2.close() ])
         .then((_) {
           expect(list.length, equals(2), reason : "output stream should contain 2 values");
@@ -43,9 +43,8 @@ class AmbTests {
           expect(isDone, equals(true),  reason : "output stream should be completed");
         });
     });
-  }
 
-  void _ambSecondStreamWins() {
+  void _ambSecondStreamWins() =>
     test('snd stream wins', () {
       var controller1 = new StreamController.broadcast(sync : true);
       var controller2 = new StreamController.broadcast(sync : true);
@@ -66,7 +65,7 @@ class AmbTests {
       controller2.add(2);
       controller1.add(3); // ignored
 
-      Future
+      return Future
         .wait([ controller1.close(), controller2.close() ])
         .then((_) {
           expect(list.length, equals(2), reason : "output stream should contain 2 values");
@@ -76,9 +75,8 @@ class AmbTests {
           expect(isDone, equals(true),  reason : "output stream should be completed");
         });
     });
-  }
 
-  void _ambNoValues() {
+  void _ambNoValues() =>
     test('no values', () {
       var controller1 = new StreamController.broadcast(sync : true);
       var controller2 = new StreamController.broadcast(sync : true);
@@ -94,7 +92,7 @@ class AmbTests {
                  onError : (_) => hasErr = true,
                  onDone  : ()  => isDone = true);
 
-      Future
+      return Future
         .wait([ controller1.close(), controller2.close() ])
         .then((_) {
           expect(list.length, equals(0), reason : "output stream should contain no value");
@@ -103,9 +101,8 @@ class AmbTests {
           expect(isDone, equals(true),  reason : "output stream should be completed");
         });
     });
-  }
 
-  void _errorsBeforeValueAreIgnored() {
+  void _errorsBeforeValueAreIgnored() =>
     test('errors before value ignored', () {
       var controller1 = new StreamController.broadcast(sync : true);
       var controller2 = new StreamController.broadcast(sync : true);
@@ -128,7 +125,7 @@ class AmbTests {
       controller2.add(2); // ignored
       controller1.add(3);
 
-      Future
+      return Future
         .wait([ controller1.close(), controller2.close() ])
         .then((_) {
           expect(list.length, equals(2), reason : "output stream should contain 2 values");
@@ -138,9 +135,8 @@ class AmbTests {
           expect(isDone, equals(true),  reason : "output stream should be completed");
         });
     });
-  }
 
-  void _ambNotCloseOnError() {
+  void _ambNotCloseOnError() =>
     test('not close on error', () {
       var controller1 = new StreamController.broadcast(sync : true);
       var controller2 = new StreamController.broadcast(sync : true);
@@ -163,7 +159,7 @@ class AmbTests {
       controller1.add(2);
       controller2.add(3); // ignored
 
-      Future
+      return Future
         .wait([ controller1.close(), controller2.close() ])
         .then((_) {
           expect(list.length, equals(3), reason : "output stream should have 3 values");
@@ -173,9 +169,8 @@ class AmbTests {
           expect(isDone, equals(true), reason : "output stream should be completed");
         });
     });
-  }
 
-  void _ambCloseOnError() {
+  void _ambCloseOnError() =>
     test('close on error', () {
       var controller1 = new StreamController.broadcast(sync : true);
       var controller2 = new StreamController.broadcast(sync : true);
@@ -208,5 +203,4 @@ class AmbTests {
       controller1.close();
       controller2.close();
     });
-  }
 }

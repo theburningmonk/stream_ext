@@ -9,7 +9,7 @@ class DelayTests {
     });
   }
 
-  void _delayWithNoErrors() {
+  void _delayWithNoErrors() =>
     test("no errors", () {
       var data    = new List.generate(3, (n) => n);
       var input   = new Stream.fromIterable(data);
@@ -24,7 +24,7 @@ class DelayTests {
 
       // since events are delayed by 1 milliseconds, give it some buffer space and check after 5 ms if
       // all the delayed events have been processed
-      Future future = new Future.delayed(new Duration(milliseconds : 10), () {
+      return new Future.delayed(new Duration(milliseconds : 10), () {
         expect(list.length, equals(3), reason : "delayed stream should have all three events");
 
         for (var i = 0; i <= 2; i++) {
@@ -34,12 +34,9 @@ class DelayTests {
         expect(hasErr, equals(false), reason : "delayed stream should not have received error");
         expect(isDone, equals(true),  reason : "delayed stream should be completed");
       });
-
-      expect(future, completes);
     });
-  }
 
-  void _delayNotCloseOnError() {
+  void _delayNotCloseOnError() =>
     test('not close on error', () {
       var controller  = new StreamController.broadcast(sync : true);
       var origin      = controller.stream;
@@ -58,7 +55,7 @@ class DelayTests {
       controller.add(2);
       controller.close();
 
-      Future future = new Future.delayed(new Duration(milliseconds : 2), () {
+      return new Future.delayed(new Duration(milliseconds : 2), () {
         expect(list.length, equals(3), reason : "delayed stream should have all three events");
 
         for (var i = 0; i <= 2; i++) {
@@ -68,12 +65,9 @@ class DelayTests {
         expect(hasErr, equals(true), reason : "delayed stream should have received error");
         expect(isDone, equals(true), reason : "delayed stream should be completed");
       });
-
-      expect(future, completes);
     });
-  }
 
-  void _delayCloseOnError() {
+  void _delayCloseOnError() =>
     test('close on error', () {
       var controller  = new StreamController.broadcast(sync : true);
       var origin      = controller.stream;
@@ -97,15 +91,12 @@ class DelayTests {
 
       // closing the controllers happen asynchronously, so give it a few milliseconds for both to complete and trigger
       // the merged stream to also complete
-      Future future = new Future.delayed(new Duration(milliseconds : 5), () {
+      return new Future.delayed(new Duration(milliseconds : 5), () {
         expect(list.length, equals(1), reason : "delayed stream should have only event before error");
         expect(list[0], equals(0),     reason : "delayed stream should contain the event value 0");
 
         expect(hasErr, equals(true), reason : "delayed stream should have received error");
         expect(isDone, equals(true), reason : "delayed stream should be completed");
       });
-
-      expect(future, completes);
     });
-  }
 }
