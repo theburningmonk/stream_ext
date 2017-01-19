@@ -38,7 +38,7 @@ Example:
 
 ### buffer
 
-The `StreamExt.buffer` method creates a new stream which buffers values from the input stream produced within the sepcified **duration** and return the buffered values as a list.
+The `StreamExt.buffer` method creates a new stream which buffers values from the input stream produced within the specified **duration** and return the buffered values as a list.
 
 The buffered stream will complete if:
 * the input stream has completed and any buffered values have been pushed
@@ -52,7 +52,7 @@ Example
 
 ### combineLatest
 
-The `StreamExt.combineLastest` method merges two streams into one by using the **selector** function to generate a new value whenever one of the streams produces a value.
+The `StreamExt.combineLatest` method merges two streams into one by using the **selector** function to generate a new value whenever one of the streams produces a value.
 
 The merged stream will complete if:
 * both input streams have completed
@@ -116,7 +116,7 @@ Example
 
 ### merge
 
-The `StreamExt.merge` method merges two streams into a single unitifed output stream.
+The `StreamExt.merge` method merges two streams into a single unified output stream.
 
 The merged stream will forward any values and errors received from the input streams and will complete if:
 * both input streams have completed
@@ -271,7 +271,7 @@ The `StreamExt.timeOut` method allows you to terminate a stream with a **Timeout
 
 The output stream will complete if:
 * the input stream has completed
-* the specified **duration** between input values has elpased
+* the specified **duration** between input values has elapsed
 * **closeOnError** flag is set to true and an error is received
 
 Example
@@ -298,7 +298,7 @@ Example
 ### window
 
 The `StreamExt.window` method projects each value from the input stream into consecutive non-overlapping windows.
-Each value proudced by the output stream contains a list of values up to the specified count.
+Each value produced by the output stream contains a list of values up to the specified count.
 
 The output stream will complete if:
 * the input stream has completed and any buffered elements have been upshed
@@ -335,7 +335,7 @@ Please take a look at the **example** directory for more complete and meaningful
 
 ## Package Import
 
-Add the `stream_ext` depedency to your pubspec.yaml ...
+Add the `stream_ext` dependency to your pubspec.yaml ...
 
     name: hello_world
     description: hello world
